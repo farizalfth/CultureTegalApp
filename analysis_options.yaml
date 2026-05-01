@@ -13,6 +13,7 @@ analyzer:
     avoid_unnecessary_containers: ignore
     constant_identifier_names: ignore
     deprecated_member_use: ignore
+    strict_top_level_inference: ignore
     unused_import: ignore
 include: package:flutter_lints/flutter.yaml
 

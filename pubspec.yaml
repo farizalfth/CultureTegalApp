@@ -19,3 +19,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/images/register/1.png
+    - assets/images/beranda/1.png
+    - assets/images/login/1.png

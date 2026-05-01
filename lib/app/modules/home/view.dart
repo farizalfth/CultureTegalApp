@@ -17,7 +17,9 @@ class HomeView extends StatelessWidget {
             _buildMenuGrid(),
             _buildMarketplaceHeader(),
             _buildHorizontalProducts(),
-            const SizedBox(height: 30), // Ruang ekstra di bawah agar UX lebih lega
+            const SizedBox(
+              height: 30,
+            ), // Ruang ekstra di bawah agar UX lebih lega
           ],
         ),
       ),
@@ -27,9 +29,17 @@ class HomeView extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
+        // 'const' dihapus karena ada AssetImage
         color: AppColors.primary,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+        // --- TAMBAHKAN BAGIAN INI ---
+        image: const DecorationImage(
+          image: AssetImage('assets/images/beranda/1.png'),
+          fit: BoxFit.cover, // Gambar menutupi seluruh area header
+          opacity: 0.2, // Membuat gambar menjadi tekstur transparan (opsional)
+        ),
+        // ----------------------------
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +115,11 @@ class HomeView extends StatelessWidget {
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.monetization_on, size: 14, color: Colors.white),
+                        Icon(
+                          Icons.monetization_on,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                         Text(
                           " 1.250",
                           style: TextStyle(
@@ -135,8 +149,16 @@ class HomeView extends StatelessWidget {
       crossAxisSpacing: 15,
       childAspectRatio: 1.4, // Sedikit lebih tinggi untuk UX yang lebih baik
       children: [
-        _menuCard("Smart Culture", Icons.auto_awesome_rounded, AppColors.cardBlue),
-        _menuCard("Jelajah Budaya", Icons.explore_rounded, AppColors.cardOrange),
+        _menuCard(
+          "Smart Culture",
+          Icons.auto_awesome_rounded,
+          AppColors.cardBlue,
+        ),
+        _menuCard(
+          "Jelajah Budaya",
+          Icons.explore_rounded,
+          AppColors.cardOrange,
+        ),
         _menuCard("Toko Budaya", Icons.local_mall_rounded, AppColors.cardRed),
         _menuCard("Kuis Budaya", Icons.quiz_rounded, AppColors.cardBrown),
       ],
@@ -154,7 +176,7 @@ class HomeView extends StatelessWidget {
             color: color.withOpacity(0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Stack(
@@ -191,7 +213,11 @@ class HomeView extends StatelessWidget {
           ),
           Text(
             "See all >",
-            style: TextStyle(color: AppColors.accent, fontSize: 13, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: AppColors.accent,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -208,17 +234,20 @@ class HomeView extends StatelessWidget {
         children: [
           // Gambar Ciri Khas Tegal diambil dari aset budaya publik
           _productCard(
-              "Batik Tegalan", 
-              "Rp250.000", 
-              "https://www.wartabahari.com/wp-content/uploads/2017/10/baatik-tegal.jpg"),
+            "Batik Tegalan",
+            "Rp250.000",
+            "https://www.wartabahari.com/wp-content/uploads/2017/10/baatik-tegal.jpg",
+          ),
           _productCard(
-              "Teh Poci Tanah", 
-              "Rp45.000", 
-              "https://upload.wikimedia.org/wikipedia/commons/c/c3/Teh_Poci_Gula_Batu.jpg"),
+            "Teh Poci Tanah",
+            "Rp45.000",
+            "https://upload.wikimedia.org/wikipedia/commons/c/c3/Teh_Poci_Gula_Batu.jpg",
+          ),
           _productCard(
-              "Krupuk Antor", 
-              "Rp15.000", 
-              "https://rricoid-assets.obs.ap-southeast-4.myhuaweicloud.com/berita/Semarang/o/1722830394570-WhatsApp_Image_2024-08-05_at_10.24.02_(1)/1axbz9w27i10r66.jpeg"),
+            "Krupuk Antor",
+            "Rp15.000",
+            "https://rricoid-assets.obs.ap-southeast-4.myhuaweicloud.com/berita/Semarang/o/1722830394570-WhatsApp_Image_2024-08-05_at_10.24.02_(1)/1axbz9w27i10r66.jpeg",
+          ),
         ],
       ),
     );
@@ -226,14 +255,19 @@ class HomeView extends StatelessWidget {
 
   Widget _productCard(String name, String price, String imageUrl) {
     return Container(
-      width: 210, 
+      width: 210,
       margin: const EdgeInsets.only(right: 18),
       decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
-          ]),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -242,7 +276,9 @@ class HomeView extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[100],
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 image: DecorationImage(
                   image: NetworkImage(imageUrl),
                   fit: BoxFit.cover,
@@ -255,19 +291,27 @@ class HomeView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                ),
                 const SizedBox(height: 5),
-                Text(price,
-                    style: const TextStyle(
-                        color: AppColors.accent,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  price,
+                  style: const TextStyle(
+                    color: AppColors.accent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
