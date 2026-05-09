@@ -126,7 +126,7 @@ class ProfileView extends StatelessWidget {
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         // --- PERBAIKAN GAMBAR DI SINI ---
         image: DecorationImage(
-          image: AssetImage('assets/images/beranda/1.png'),
+          image: AssetImage('assets/images/beranda/cover_atas.png'),
           fit: BoxFit.cover, // MEMBUAT GAMBAR FULL MENUTUPI BACKGROUND
           opacity: 0.15, // Tekstur halus agar teks tetap terbaca
           alignment: Alignment.center, // Memastikan gambar di tengah

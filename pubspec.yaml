@@ -22,5 +22,8 @@ flutter:
 
   assets:
     - assets/images/register/1.png
-    - assets/images/beranda/1.png
-    - assets/images/login/1.png
+    - assets/images/beranda/cover_atas.png
+    - assets/images/login/cover_login.png
+    - assets/images/login/google_icon.png
+    - assets/images/
+    - assets/images/jelajah/cover_info_badge.png
