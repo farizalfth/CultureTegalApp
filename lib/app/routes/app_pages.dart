@@ -1,9 +1,12 @@
 import 'package:get/get.dart';
 
-
+import '../modules/detail_budaya/bindings/detail_budaya_binding.dart';
+import '../modules/detail_budaya/views/detail_budaya_view.dart';
 import '../modules/event/bindings/detail_event_binding.dart';
 import '../modules/event/bindings/event_binding.dart';
+import '../modules/event/bindings/event_list_binding.dart';
 import '../modules/event/views/detail_event_view.dart';
+import '../modules/event/views/event_list_view.dart';
 import '../modules/event/views/event_view.dart';
 import '../modules/explore/bindings/explore_binding.dart';
 import '../modules/explore/views/explore_view.dart';
@@ -13,8 +16,16 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/main/bindings/main_binding.dart';
 import '../modules/main/views/main_view.dart';
+import '../modules/news/bindings/news_detail_binding.dart';
+import '../modules/news/bindings/news_list_binding.dart';
+import '../modules/news/views/news_detail_view.dart';
+import '../modules/news/views/news_list_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
+import '../modules/review/bindings/review_binding.dart';
+import '../modules/review/views/review_view.dart';
+import '../modules/search/bindings/search_page_binding.dart';
+import '../modules/search/views/search_page_view.dart';
 import '../modules/umkm/bindings/umkm_binding.dart';
 import '../modules/umkm/views/umkm_view.dart';
 
@@ -53,6 +64,24 @@ class AppPages {
       binding: MainBinding(),
     ),
     GetPage(
+      name: _Paths.DETAIL_BUDAYA,
+      page: () => const DetailBudayaView(),
+      binding: DetailBudayaBinding(),
+      transition: Transition.fadeIn,
+      children: [
+        GetPage(
+          name: _Paths.DETAIL_BUDAYA,
+          page: () => const DetailBudayaView(),
+          binding: DetailBudayaBinding(),
+        ),
+      ],
+    ),
+    GetPage(
+      name: _Paths.REVIEWS,
+      page: () => const ReviewView(),
+      binding: ReviewBinding(),
+    ),
+    GetPage(
       name: _Paths.EVENT,
       page: () => const EventView(),
       binding: EventBinding(),
@@ -64,9 +93,38 @@ class AppPages {
       transition: Transition.fadeIn,
     ),
     GetPage(
+      name: _Paths.EVENT_LIST,
+      page: () => const EventListView(),
+      binding: EventListBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.NEWS_LIST,
+      page: () => const NewsListView(),
+      binding: NewsListBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.NEWS_DETAIL,
+      page: () => const NewsDetailView(),
+      binding: NewsDetailBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
       name: _Paths.UMKM,
       page: () => const UmkmView(),
       binding: UmkmBinding(),
+    ),
+    GetPage(
+      name: _Paths.SEARCH,
+      page: () => const SearchPageView(),
+      binding: SearchPageBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: _Paths.REVIEW,
+      page: () => const ReviewView(),
+      binding: ReviewBinding(),
     ),
   ];
 }
