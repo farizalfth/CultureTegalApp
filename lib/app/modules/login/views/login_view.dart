@@ -78,7 +78,7 @@ class LoginView extends GetView<LoginController> {
                         ),
                         const SizedBox(height: 30),
                         OutlinedButton(
-                          onPressed: () {},
+                          onPressed: () => controller.loginWithGoogle(),
                           style: OutlinedButton.styleFrom(
                             minimumSize: Size(
                               double.infinity,
@@ -131,7 +131,7 @@ class LoginView extends GetView<LoginController> {
                                 controller.togglePasswordVisibility(),
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Align(
                           alignment: Alignment.centerRight,
                           child: Theme(
@@ -242,6 +242,37 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ],
               ),
+            ),
+          ),
+          Positioned.fill(
+            child: Obx(
+              () => controller.isLoading.value
+                  ? Container(
+                      color: Colors.black.withOpacity(0.3),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.primary,
+                            ),
+                            strokeWidth: 3,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
         ],

@@ -11,6 +11,11 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   get: ^4.7.3
+  flutter_dotenv: ^6.0.1
+  supabase_flutter: ^2.12.4
+  google_sign_in: ^7.2.0
+  http: ^1.6.0
+  flutter_secure_storage: ^10.2.0
 
 dev_dependencies:
   flutter_test:
@@ -21,7 +26,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/register/1.png
+    - .env
+    - assets/images/register/register_icon.png
     - assets/images/beranda/cover_atas.png
     - assets/images/login/cover_login.png
     - assets/images/login/google_icon.png
