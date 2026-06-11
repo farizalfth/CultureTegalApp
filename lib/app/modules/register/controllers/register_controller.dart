@@ -62,7 +62,17 @@ class RegisterController extends GetxController {
         passwordController.text.trim(),
         nameController.text.trim(),
       );
-      Get.offAllNamed('/main');
+
+      Get.snackbar(
+        'Pendaftaran Berhasil',
+        'Silakan cek kotak masuk atau folder spam email Anda untuk memverifikasi akun sebelum masuk.',
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 6),
+        snackPosition: SnackPosition.TOP,
+      );
+
+      Get.offAllNamed('/login');
     } catch (e) {
       Get.snackbar(
         'Pendaftaran Gagal',

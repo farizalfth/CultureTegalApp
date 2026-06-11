@@ -34,10 +34,11 @@ class LoginController extends GetxController {
       Get.offAllNamed('/main');
     } catch (e) {
       Get.snackbar(
-        'Login Gagal',
+        'Gagal Masuk',
         e.toString(),
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
     } finally {
       isLoading.value = false;
