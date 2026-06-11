@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -11,26 +14,72 @@ class AuthService extends GetxService {
 
   Future<AuthService> init() async {
     apiUrl = dotenv.env['FLASK_API_URL']!;
-
     final String webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID']!;
 
-    await GoogleSignIn.instance.initialize(
-      serverClientId: webClientId,
-    );
+    await GoogleSignIn.instance.initialize(serverClientId: webClientId);
+
+    supabase.auth.onAuthStateChange.listen((data) async {
+      final AuthChangeEvent event = data.event;
+      final Session? session = data.session;
+
+      if (event == AuthChangeEvent.passwordRecovery) {
+        developer.log("Event Lupa Sandi Terdeteksi");
+        Get.toNamed('/update-password');
+      } else if (event == AuthChangeEvent.signedIn && session != null) {
+        developer.log("Event Pengguna Masuk/Terverifikasi Terdeteksi");
+
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          Get.dialog(
+            const Center(
+              child: CircularProgressIndicator(color: Color(0xFFE67E22)),
+            ),
+            barrierDismissible: false,
+            barrierColor: Colors.white.withOpacity(0.8),
+          );
+
+          try {
+            final user = session.user;
+            final name =
+                user.userMetadata?['full_name'] ?? user.email?.split('@')[0];
+
+            await _syncUserToBackend(session.accessToken, name, 'email');
+            developer.log("Sinkronisasi berhasil!");
+
+            Get.offAllNamed('/main');
+          } catch (e) {
+            developer.log("Gagal sinkronisasi otomatis: $e");
+            Get.back();
+            Get.snackbar(
+              'Kesalahan Sistem',
+              'Gagal menyinkronkan data: $e',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        });
+      }
+    });
 
     return this;
   }
 
-  Future<void> registerWithEmail(String email, String password, String name) async {
+  Future<void> registerWithEmail(
+    String email,
+    String password,
+    String name,
+  ) async {
     try {
       final AuthResponse res = await supabase.auth.signUp(
         email: email,
         password: password,
         data: {'full_name': name},
+        emailRedirectTo: 'culturaltegal://login-callback',
       );
 
       if (res.session != null) {
-        print(res.session!.accessToken); // cek jwt
+        developer.log("=== TOKEN PENDAFTARAN UTUH ===");
+        developer.log(res.session!.accessToken);
+        developer.log("===============================");
         await _syncUserToBackend(res.session!.accessToken, name, 'email');
       }
     } on AuthException catch (e) {
@@ -53,7 +102,9 @@ class AuthService extends GetxService {
       );
 
       if (res.session != null) {
-        print(res.session!.accessToken); // cek jwt
+        developer.log("=== TOKEN MASUK UTUH ===");
+        developer.log(res.session!.accessToken);
+        developer.log("=========================");
         await _syncUserToBackend(res.session!.accessToken, null, 'email');
       }
     } on AuthException catch (e) {
@@ -70,7 +121,8 @@ class AuthService extends GetxService {
 
   Future<void> loginWithGoogle() async {
     try {
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final String? idToken = googleAuth.idToken;
@@ -79,7 +131,8 @@ class AuthService extends GetxService {
         throw 'Gagal mendapatkan ID Token dari Google.';
       }
 
-      final authorization = await googleUser.authorizationClient.authorizationForScopes(['email', 'profile']);
+      final authorization = await googleUser.authorizationClient
+          .authorizationForScopes(['email', 'profile']);
       final String? accessToken = authorization?.accessToken;
 
       if (accessToken == null) {
@@ -93,12 +146,14 @@ class AuthService extends GetxService {
       );
 
       if (res.session != null) {
-        print(res.session!.accessToken); // cek jwt
+        developer.log("=== TOKEN GOOGLE UTUH ===");
+        developer.log(res.session!.accessToken);
+        developer.log("=========================");
         await _syncUserToBackend(
-            res.session!.accessToken,
-            googleUser.displayName ?? 'Pengguna Google',
-            'google',
-            googleUser.photoUrl
+          res.session!.accessToken,
+          googleUser.displayName ?? 'Pengguna Google',
+          'google',
+          googleUser.photoUrl,
         );
       }
     } on AuthException catch (e) {
@@ -110,8 +165,19 @@ class AuthService extends GetxService {
     }
   }
 
-  Future<void> _syncUserToBackend(String token, String? name, String provider, [String? profilePicture]) async {
+  Future<void> _syncUserToBackend(
+    String token,
+    String? name,
+    String provider, [
+    String? profilePicture,
+  ]) async {
     try {
+      String? oneSignalId;
+      final pushSubscription = OneSignal.User.pushSubscription;
+      if (pushSubscription.optedIn == true && pushSubscription.id != null) {
+        oneSignalId = pushSubscription.id;
+      }
+
       final response = await http.post(
         Uri.parse('$apiUrl/auth/sync'),
         headers: {
@@ -122,6 +188,7 @@ class AuthService extends GetxService {
           'nama': name,
           'provider': provider,
           'profile_picture': profilePicture,
+          'onesignal_id': oneSignalId,
         }),
       );
 
@@ -130,6 +197,32 @@ class AuthService extends GetxService {
       }
     } catch (e) {
       throw 'Kesalahan sinkronisasi server: $e';
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'culturaltegal://login-callback',
+      );
+    } on AuthException catch (e) {
+      if (e.message.contains('not found')) {
+        throw 'Email tidak terdaftar di sistem kami.';
+      }
+      throw 'Gagal mengirim email reset sandi: ${e.message}';
+    } catch (e) {
+      throw 'Terjadi kesalahan sistem: $e';
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await supabase.auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (e) {
+      throw 'Gagal memperbarui kata sandi: ${e.message}';
+    } catch (e) {
+      throw 'Terjadi kesalahan sistem: $e';
     }
   }
 
