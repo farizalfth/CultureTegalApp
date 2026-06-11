@@ -141,7 +141,7 @@ class LoginView extends GetView<LoginController> {
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                onTap: () {},
+                                onTap: () => Get.toNamed('/forgot-password'),
                                 borderRadius: BorderRadius.circular(25),
                                 splashColor: AppColors.accent.withOpacity(0.15),
                                 highlightColor: AppColors.accent.withOpacity(
