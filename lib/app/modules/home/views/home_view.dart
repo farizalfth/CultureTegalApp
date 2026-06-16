@@ -19,35 +19,41 @@ class HomeView extends GetView<HomeController> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Obx(
-              () => MainHeader(
-                title: "Tegal Culture",
-                subtitle: "Halo, ${UserService.to.user.value.name}!",
-                hintText: "Cari budaya Tegal...",
-              ),
-            ),
-            _buildMenuGrid(),
-            _buildSectionHeader(
-              "Event Budaya",
-                  () {
+      body: RefreshIndicator(
+        onRefresh: () => controller.loadAllData(),
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics(),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Obx(() {
+                final user = UserService.to.user.value;
+                final displayName = user?.name ?? "Nadhif Basalamah";
+                return MainHeader(
+                  title: "Tegal Culture",
+                  subtitle: "Halo, $displayName!",
+                  hintText: "Cari budaya Tegal...",
+                );
+              }),
+              _buildMenuGrid(),
+              _buildSectionHeader("Event Budaya", () {
                 Get.find<MainController>().currentIndex.value = 2;
-              },
-            ),
-            _buildRunningEvents(screenWidth, screenHeight),
-            _buildSectionHeader("Marketplace UMKM", () {}),
-            _buildHorizontalProducts(screenWidth, screenHeight),
-            _buildSectionHeader(
-              "Berita Tegal",
-              () => Get.toNamed(Routes.NEWS_LIST),
-            ),
-            _buildNewsList(screenWidth),
-            SizedBox(height: context.mediaQueryPadding.bottom + 110),
-          ],
+              }),
+              _buildRunningEvents(screenWidth, screenHeight),
+              _buildSectionHeader("Marketplace UMKM", () {}),
+              _buildHorizontalProducts(screenWidth, screenHeight),
+              _buildSectionHeader(
+                "Berita Tegal",
+                () => Get.toNamed(Routes.NEWS_LIST),
+              ),
+              _buildNewsList(screenWidth),
+              SizedBox(height: context.mediaQueryPadding.bottom + 110),
+            ],
+          ),
         ),
       ),
     );

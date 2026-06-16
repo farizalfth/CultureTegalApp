@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/event_model.dart';
+import '../../../data/service/user_service.dart';
 
 class HomeController extends GetxController {
-  final userName = "Nadhif Basalamah".obs;
-  final userPoints = "1.250".obs;
+  static HomeController get to => Get.find();
+
+  final isLoading = false.obs;
 
   final RxList<EventModel> events = <EventModel>[
     EventModel(
@@ -88,6 +90,23 @@ class HomeController extends GetxController {
       ],
     ),
   ].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadAllData();
+  }
+
+  Future<void> loadAllData() async {
+    try {
+      isLoading.value = true;
+      await Future.wait([UserService.to.refreshUserData()]);
+    } catch (e) {
+      debugPrint("Gagal memperbarui data halaman beranda: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   void onScanTap() {}
   void onProfileTap() {}
