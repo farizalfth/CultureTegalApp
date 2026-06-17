@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../routes/app_pages.dart';
+import '../../../utils/icon_mapping.dart';
+import '../../../utils/image_viewer.dart';
 import '../controllers/detail_budaya_controller.dart';
+import '../../../data/models/review_model.dart';
+import '../../../utils/shimmer_placeholder.dart';
+import 'gallery_views.dart';
 
 class DetailBudayaView extends GetView<DetailBudayaController> {
   const DetailBudayaView({super.key});
@@ -10,6 +16,9 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
   @override
   Widget build(BuildContext context) {
     final culture = controller.culture;
+    final List<String> displayGallery = culture.gallery.isEmpty
+        ? [culture.image]
+        : culture.gallery;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -30,15 +39,28 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                           controller: controller.pageController,
                           onPageChanged: (index) =>
                               controller.currentIndex.value = index,
-                          itemCount: controller.culture.gallery.length > 5
+                          itemCount: displayGallery.length > 5
                               ? 5
-                              : controller.culture.gallery.length,
+                              : displayGallery.length,
                           itemBuilder: (context, index) {
-                            return Image.network(
-                              controller.culture.gallery[index],
-                              width: double.infinity,
-                              height: 350,
-                              fit: BoxFit.cover,
+                            return GestureDetector(
+                              onTap: () => Get.to(
+                                () => const ImageViewerView(),
+                                arguments: displayGallery[index],
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: displayGallery[index],
+                                width: double.infinity,
+                                height: 350,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const ShimmerPlaceholder(
+                                      width: double.infinity,
+                                      height: 350,
+                                    ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                              ),
                             );
                           },
                         ),
@@ -144,10 +166,8 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                             _buildFacilitiesSection(),
                             const SizedBox(height: 24),
                           ],
-                          if (culture.reviews.isNotEmpty) ...[
-                            _buildReviewsSection(),
-                            const SizedBox(height: 100),
-                          ],
+                          _buildReviewsSection(),
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -331,6 +351,8 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
 
   Widget _buildGallerySection() {
     final gallery = controller.culture.gallery;
+    final limitedGallery = gallery.take(4).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -345,12 +367,16 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 color: Colors.black87,
               ),
             ),
-            Text(
-              "Lihat Semua",
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+            GestureDetector(
+              onTap: () =>
+                  Get.to(() => const GalleryView(), arguments: gallery),
+              child: Text(
+                "Lihat Semua",
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -360,16 +386,31 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
           height: 80,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: gallery.length,
+            itemCount: limitedGallery.length,
             itemBuilder: (context, index) {
-              return Container(
-                width: 80,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: NetworkImage(gallery[index]),
-                    fit: BoxFit.cover,
+              return GestureDetector(
+                onTap: () => Get.to(
+                  () => const ImageViewerView(),
+                  arguments: limitedGallery[index],
+                ),
+                child: Container(
+                  width: 80,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: limitedGallery[index],
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const ShimmerPlaceholder(
+                        width: 80,
+                        height: 80,
+                        borderRadius: 12,
+                      ),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
+                    ),
                   ),
                 ),
               );
@@ -440,57 +481,48 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 50,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: facilities.length,
-            itemBuilder: (context, index) {
-              final fac = facilities[index];
-              return Container(
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      fac.icon == "parking"
-                          ? Icons.local_parking_rounded
-                          : fac.icon == "toilet"
-                          ? Icons.wc_rounded
-                          : fac.icon == "mosque"
-                          ? Icons.mosque_rounded
-                          : Icons.restaurant_rounded,
-                      color: AppColors.primary,
-                      size: 18,
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: facilities.map((fac) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    IconMapping.getIcon(fac.icon),
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    fac.name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade800,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      fac.name,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade800,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
   }
 
   Widget _buildReviewsSection() {
-    if (controller.culture.reviews.isEmpty) return const SizedBox.shrink();
+    final list = controller.culture.reviews;
+    if (list.isEmpty) return const SizedBox.shrink();
 
-    final review = controller.culture.reviews.first;
+    final limitedReviews = list.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,77 +553,120 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
           ],
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade100),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(review.userAvatar),
-                    radius: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          review.userName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          review.date,
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: List.generate(
-                      5,
-                      (index) => Icon(
-                        Icons.star_rounded,
-                        color: index < review.rating.toInt()
-                            ? Colors.amber
-                            : Colors.grey.shade200,
-                        size: 16,
+        ...limitedReviews.map((review) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade100),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: CachedNetworkImageProvider(
+                        review.userAvatar,
                       ),
+                      radius: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            review.userName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            review.date,
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(
+                        5,
+                        (index) => Icon(
+                          Icons.star_rounded,
+                          color: index < review.rating.toInt()
+                              ? Colors.amber
+                              : Colors.grey.shade200,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  review.comment,
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                if (review.reviewImages.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 80,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: review.reviewImages.length,
+                      itemBuilder: (context, idx) {
+                        return GestureDetector(
+                          onTap: () => Get.to(
+                            () => const ImageViewerView(),
+                            arguments: review.reviewImages[idx],
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: CachedNetworkImage(
+                                imageUrl: review.reviewImages[idx],
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const ShimmerPlaceholder(
+                                      width: 80,
+                                      height: 80,
+                                      borderRadius: 10,
+                                    ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                review.comment,
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }

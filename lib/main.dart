@@ -103,6 +103,15 @@ void main() async {
   runApp(
     GetMaterialApp(
       title: "Tegal Culture",
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFE67E22),
+          primary: const Color(0xFFE67E22),
+          surface: const Color(0xFFFDF5E6),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFFDF5E6),
+      ),
       initialBinding: InitialBinding(),
       initialRoute: Get.find<AuthService>().isLoggedIn
           ? Routes.MAIN
