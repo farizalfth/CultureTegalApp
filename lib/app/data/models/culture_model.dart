@@ -39,4 +39,35 @@ class CultureModel {
     required this.reviews,
     this.isSlider = false,
   });
+
+  factory CultureModel.fromJson(Map<String, dynamic> json) {
+    return CultureModel(
+      id: json['id']?.toString() ?? '',
+      title: json['nama_tempat']?.toString() ?? '',
+      subtitle: json['subtitle']?.toString() ?? '',
+      category: json['kategori']?.toString() ?? '',
+      description: json['deskripsi']?.toString() ?? '',
+      image: json['image_url']?.toString() ?? '',
+      gallery: (json['gallery'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList() ??
+          [],
+      builtYear: json['tahun_dibangun']?.toString() ?? '',
+      subLocation: json['lokasi_singkat']?.toString() ?? '',
+      duration: json['durasi_kunjungan']?.toString() ?? '',
+      distance: json['jarak_estimasi']?.toString() ?? '',
+      funFact: json['fun_fact']?.toString() ?? '',
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      isSlider: json['is_slider'] as bool? ?? false,
+      facilities: (json['facilities'] as List<dynamic>?)
+          ?.map((item) => FacilityModel.fromJson(item as Map<String, dynamic>))
+          .toList() ??
+          [],
+      reviews: (json['reviews'] as List<dynamic>?)
+          ?.map((item) => ReviewModel.fromJson(item as Map<String, dynamic>))
+          .toList() ??
+          [],
+    );
+  }
 }

@@ -55,12 +55,11 @@ class MainHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // Menggunakan Obx hanya pada bagian nama agar reaktif
                     Obx(() {
                       final user = UserService.to.user.value;
                       final displayName =
                           user?.name ??
-                          "Nadhif Basalamah"; // Fallback jika null
+                          "Pengguna Aplikasi";
                       return Text(
                         "Halo, $displayName!",
                         style: const TextStyle(
