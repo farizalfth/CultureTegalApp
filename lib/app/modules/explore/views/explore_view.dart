@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../data/models/culture_model.dart';
 import '../../../routes/app_pages.dart';
@@ -13,32 +14,116 @@ class ExploreView extends GetView<ExploreController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          children: [
-            const MainHeader(
-              title: "Jelajah Budaya",
-              subtitle: "Temukan keindahan budaya Kota Tegal",
-              hintText: "Cari tempat budaya...",
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCategoryTabs(),
-                  const SizedBox(height: 30),
-                  Obx(() {
-                    final sliderItems = controller.activeSliderItems;
-                    final places = controller.filteredPlaces;
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchCulturesData(),
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics(),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const MainHeader(
+                title: "Jelajah Budaya",
+                subtitle: "Temukan keindahan budaya Kota Tegal",
+                hintText: "Cari tempat budaya...",
+              ),
+              Obx(() {
+                if (controller.hasError.value) {
+                  return _buildErrorState();
+                }
 
-                    return controller.selectedCategoryIndex.value == 0
-                        ? _buildSemuaLayout(context, sliderItems, places)
-                        : _buildFilteredLayout(context, sliderItems, places);
-                  }),
-                  const SizedBox(height: 110),
-                ],
+                if (controller.isLoading.value && controller.allData.isEmpty) {
+                  return _buildLoadingState();
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 25,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCategoryTabs(),
+                      const SizedBox(height: 30),
+                      Obx(() {
+                        final sliderItems = controller.activeSliderItems;
+                        final places = controller.filteredPlaces;
+
+                        return controller.selectedCategoryIndex.value == 0
+                            ? _buildSemuaLayout(context, sliderItems, places)
+                            : _buildFilteredLayout(
+                                context,
+                                sliderItems,
+                                places,
+                              );
+                      }),
+                      const SizedBox(height: 110),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 120),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 16),
+            Text(
+              "Memuat data keindahan budaya...",
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 100),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
+              "Gagal Terhubung ke Server",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              controller.errorMessage.value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => controller.fetchCulturesData(),
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              label: const Text(
+                "Coba Lagi",
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -130,11 +215,15 @@ class ExploreView extends GetView<ExploreController> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(28),
-                        child: Image.network(
-                          place.image,
+                        child: CachedNetworkImage(
+                          imageUrl: place.image,
                           width: double.infinity,
                           height: 200,
                           fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              const Center(child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
                         ),
                       ),
                       Container(
@@ -234,7 +323,6 @@ class ExploreView extends GetView<ExploreController> {
       {'icon': Icons.theater_comedy_rounded, 'label': 'Tradisi'},
       {'icon': Icons.restaurant_rounded, 'label': 'Kuliner'},
       {'icon': Icons.terrain_rounded, 'label': 'Wisata'},
-      {'icon': Icons.storefront_rounded, 'label': 'UMKM'},
     ];
     return SizedBox(
       height: 95,
@@ -342,11 +430,14 @@ class ExploreView extends GetView<ExploreController> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
-                child: Image.network(
-                  img,
+                child: CachedNetworkImage(
+                  imageUrl: img,
                   height: 110,
                   width: 180,
                   fit: BoxFit.cover,
+                  placeholder: (context, url) =>
+                      const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               ),
               Positioned(
@@ -489,11 +580,14 @@ class ExploreView extends GetView<ExploreController> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(18),
-            child: Image.network(
-              imgUrl,
+            child: CachedNetworkImage(
+              imageUrl: imgUrl,
               width: 90,
               height: 90,
               fit: BoxFit.cover,
+              placeholder: (context, url) =>
+                  const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
           const SizedBox(width: 15),

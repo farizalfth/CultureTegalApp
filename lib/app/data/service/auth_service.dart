@@ -234,4 +234,5 @@ class AuthService extends GetxService {
 
   bool get isLoggedIn => supabase.auth.currentSession != null;
   String? get currentToken => supabase.auth.currentSession?.accessToken;
+  String? get currentUserId => supabase.auth.currentUser?.id;
 }
