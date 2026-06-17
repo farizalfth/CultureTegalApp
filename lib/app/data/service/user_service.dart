@@ -15,11 +15,24 @@ class UserService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    refreshUserData().then((_) {
-      if (user.value != null) {
-        _subscribeToUserChanges(user.value!.id);
+    _initializeUser();
+  }
+
+  Future<void> _initializeUser() async {
+    await _waitForAuth();
+    await refreshUserData();
+    if (user.value != null) {
+      _subscribeToUserChanges(user.value!.id);
+    }
+  }
+
+  Future<void> _waitForAuth() async {
+    for (int i = 0; i < 15; i++) {
+      if (Supabase.instance.client.auth.currentSession?.accessToken != null) {
+        break;
       }
-    });
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   Future<void> refreshUserData() async {

@@ -18,6 +18,8 @@ dependencies:
   flutter_secure_storage: ^10.2.0
   flutter_launcher_icons: ^0.14.4
   onesignal_flutter: ^5.6.0
+  cached_network_image: ^3.4.1
+  image_picker: ^1.2.2
 
 dev_dependencies:
   flutter_test:
