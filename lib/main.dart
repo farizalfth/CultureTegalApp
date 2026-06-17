@@ -6,6 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'dart:developer' as developer;
 
+import 'app/bindings/initial_binding.dart';
+import 'app/data/providers/user_provider.dart';
+import 'app/data/repositories/user_repository.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/service/auth_service.dart';
 import 'app/data/service/user_service.dart';
@@ -36,11 +39,14 @@ void main() async {
   PlatformDispatcher.instance.onError = (error, stackTrace) {
     final errorMessage = error.toString();
 
-    if (errorMessage.contains('otp_expired') || errorMessage.contains('access_denied')) {
+    if (errorMessage.contains('otp_expired') ||
+        errorMessage.contains('access_denied')) {
       developer.log("INFO: Tautan kedaluwarsa ditangkap.");
 
       Future.delayed(const Duration(milliseconds: 500), () {
-        final isLoggedIn = Get.isRegistered<AuthService>() ? Get.find<AuthService>().isLoggedIn : false;
+        final isLoggedIn = Get.isRegistered<AuthService>()
+            ? Get.find<AuthService>().isLoggedIn
+            : false;
 
         if (isLoggedIn) {
           Get.snackbar(
@@ -87,20 +93,20 @@ void main() async {
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseKey,
-    authOptions: FlutterAuthClientOptions(
-      localStorage: SecureLocalStorage(),
-    ),
+    authOptions: FlutterAuthClientOptions(localStorage: SecureLocalStorage()),
   );
 
   initOneSignal();
 
   await Get.putAsync(() => AuthService().init());
-  Get.put(UserService());
 
   runApp(
     GetMaterialApp(
       title: "Tegal Culture",
-      initialRoute: Get.find<AuthService>().isLoggedIn ? Routes.MAIN : AppPages.INITIAL,
+      initialBinding: InitialBinding(),
+      initialRoute: Get.find<AuthService>().isLoggedIn
+          ? Routes.MAIN
+          : AppPages.INITIAL,
       getPages: AppPages.routes,
       unknownRoute: GetPage(
         name: '/notfound',

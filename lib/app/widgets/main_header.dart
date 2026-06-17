@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../data/app_colors.dart';
 import '../data/service/user_service.dart';
+import '../modules/main/controllers/controller.dart';
 import '../routes/app_pages.dart';
 
 class MainHeader extends StatelessWidget {
@@ -18,8 +19,6 @@ class MainHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = UserService.to.user.value;
-
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -56,14 +55,21 @@ class MainHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    // Menggunakan Obx hanya pada bagian nama agar reaktif
+                    Obx(() {
+                      final user = UserService.to.user.value;
+                      final displayName =
+                          user?.name ??
+                          "Nadhif Basalamah"; // Fallback jika null
+                      return Text(
+                        "Halo, $displayName!",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -71,16 +77,31 @@ class MainHeader extends StatelessWidget {
                 children: [
                   _buildActionIcon(Icons.notifications_none_rounded),
                   const SizedBox(width: 12),
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.white24,
-                    backgroundImage: user.profilePicture != null
-                        ? NetworkImage(user.profilePicture!)
-                        : null,
-                    child: user.profilePicture == null
-                        ? const Icon(Icons.person_rounded, color: Colors.white)
-                        : null,
-                  ),
+                  Obx(() {
+                    final user = UserService.to.user.value;
+                    final hasPhoto =
+                        user?.profilePicture != null &&
+                        user!.profilePicture!.isNotEmpty;
+
+                    return GestureDetector(
+                      onTap: () {
+                        Get.find<MainController>().changePage(4);
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.white24,
+                        backgroundImage: hasPhoto
+                            ? NetworkImage(user.profilePicture!)
+                            : null,
+                        child: !hasPhoto
+                            ? const Icon(
+                                Icons.person_rounded,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                    );
+                  }),
                 ],
               ),
             ],
@@ -91,8 +112,7 @@ class MainHeader extends StatelessWidget {
               Expanded(
                 child: Container(
                   height: 60,
-                  alignment: Alignment
-                      .center,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -115,11 +135,18 @@ class MainHeader extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.search_rounded, color: Colors.grey, size: 24),
+                          const Icon(
+                            Icons.search_rounded,
+                            color: Colors.grey,
+                            size: 24,
+                          ),
                           const SizedBox(width: 10),
                           Text(
                             hintText,
-                            style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
@@ -128,7 +155,11 @@ class MainHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              _buildQuizPointsCard(user.points),
+              Obx(() {
+                final user = UserService.to.user.value;
+                final userPoints = user?.points ?? "0";
+                return _buildQuizPointsCard(userPoints);
+              }),
             ],
           ),
         ],
