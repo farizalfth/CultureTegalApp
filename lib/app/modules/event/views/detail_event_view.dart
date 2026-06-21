@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../controllers/detail_event_controller.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class DetailEventView extends GetView<DetailEventController> {
   const DetailEventView({super.key});
@@ -22,16 +24,23 @@ class DetailEventView extends GetView<DetailEventController> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Image.network(
-                      event.imageUrl ??
+                    CachedNetworkImage(
+                      imageUrl:
+                          event.imageUrl ??
                           'https://radarcbs.com/assets/images/1770943164_1840ce5bbf3c827b7d85.jpg',
                       width: double.infinity,
                       height: 280,
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => const ShimmerPlaceholder(
+                        width: double.infinity,
+                        height: 280,
+                      ),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
                     ),
                     Positioned(
                       bottom: -20,
-                      left: 20,
+                      left: 10,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 18,
@@ -74,7 +83,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 45),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -111,7 +120,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 15),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     children: [
                       _infoRow(Icons.location_on_outlined, event.location),
@@ -124,7 +133,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 25),
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF9F2),
@@ -176,7 +185,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 30),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
                     "Detail Event",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -184,7 +193,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 15),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     children: [
                       _detailRow(Icons.calendar_month_outlined, event.fullDate),
@@ -205,7 +214,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 30),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
                     "Lokasi Event",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -213,7 +222,7 @@ class DetailEventView extends GetView<DetailEventController> {
                 ),
                 const SizedBox(height: 15),
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),

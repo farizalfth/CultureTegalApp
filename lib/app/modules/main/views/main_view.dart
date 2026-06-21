@@ -8,6 +8,7 @@ import '../../home/views/home_view.dart';
 import '../../profile/view.dart';
 import '../../umkm/views/umkm_view.dart';
 import '../controllers/controller.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class MainWrapper extends GetView<MainController> {
   const MainWrapper({super.key});
@@ -25,14 +26,32 @@ class MainWrapper extends GetView<MainController> {
     return Scaffold(
       body: Stack(
         children: [
-          Obx(
-            () => IndexedStack(
+          Obx(() {
+            if (controller.bootError.value) {
+              return _buildGlobalBootErrorState();
+            }
+
+            if (controller.isBooting.value) {
+              return _buildGlobalBootingState(context);
+            }
+
+            return IndexedStack(
               index: controller.currentIndex.value,
               children: screens,
-            ),
-          ),
-          _buildFabOverlay(),
-          _buildRadialMenu(context),
+            );
+          }),
+          Obx(() {
+            if (controller.isBooting.value || controller.bootError.value) {
+              return const SizedBox.shrink();
+            }
+            return Stack(
+              children: [
+                _buildFabOverlay(),
+                _buildRadialMenu(context),
+                _buildGlobalScrollToTopButton(context),
+              ],
+            );
+          }),
         ],
       ),
       bottomNavigationBar: Obx(
@@ -49,8 +68,9 @@ class MainWrapper extends GetView<MainController> {
           child: BottomNavigationBar(
             currentIndex: controller.currentIndex.value,
             onTap: (index) {
-              controller.currentIndex.value = index;
-              controller.isFabExpanded.value = false;
+              if (!controller.isBooting.value && !controller.bootError.value) {
+                controller.changePage(index);
+              }
             },
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
@@ -83,6 +103,162 @@ class MainWrapper extends GetView<MainController> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlobalScrollToTopButton(BuildContext context) {
+    final double baseBottom = context.mediaQueryPadding.bottom + 20;
+
+    return Obx(() {
+      final bool isVisible = controller.showScrollToTop.value;
+
+      return AnimatedPositioned(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        left: 20,
+        bottom: isVisible ? baseBottom : -80,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 250),
+          opacity: isVisible ? 1.0 : 0.0,
+          child: GestureDetector(
+            onTap: () => controller.scrollToTop(),
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_upward_rounded,
+                color: AppColors.primary,
+                size: 26,
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildGlobalBootingState(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      width: double.infinity,
+      height: double.infinity,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ShimmerPlaceholder(
+              width: double.infinity,
+              height: context.mediaQueryPadding.top + 160,
+              borderRadius: 0,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
+                  const ShimmerPlaceholder(
+                    width: 150,
+                    height: 24,
+                    borderRadius: 8,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(
+                      4,
+                      (index) => const ShimmerPlaceholder(
+                        width: 65,
+                        height: 65,
+                        borderRadius: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  const ShimmerPlaceholder(
+                    width: 180,
+                    height: 24,
+                    borderRadius: 8,
+                  ),
+                  const SizedBox(height: 20),
+                  const ShimmerPlaceholder(
+                    width: double.infinity,
+                    height: 180,
+                    borderRadius: 20,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlobalBootErrorState() {
+    return Container(
+      color: Colors.white,
+      width: double.infinity,
+      height: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 72, color: Colors.grey),
+            const SizedBox(height: 24),
+            const Text(
+              "Gagal Memuat Sistem",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              controller.bootErrorMessage.value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () => controller.initializeSystem(),
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              label: const Text(
+                "Coba Lagi",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: const Size(200, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

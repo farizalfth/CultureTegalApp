@@ -340,110 +340,126 @@ class ReviewView extends GetView<ReviewController> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: list.length,
+      itemCount: list.length + (controller.isLoadMore.value ? 1 : 0),
       itemBuilder: (context, index) {
-        final review = list[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(
-                      review.userAvatar,
-                    ),
-                    radius: 18,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          review.userName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          review.date,
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: List.generate(
-                      5,
-                      (i) => Icon(
-                        Icons.star_rounded,
-                        color: i < review.rating.toInt()
-                            ? Colors.amber
-                            : Colors.grey.shade200,
-                        size: 14,
+        if (index < list.length) {
+          final review = list[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: CachedNetworkImageProvider(
+                        review.userAvatar,
                       ),
+                      radius: 18,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            review.userName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            review.date,
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(
+                        5,
+                        (i) => Icon(
+                          Icons.star_rounded,
+                          color: i < review.rating.toInt()
+                              ? Colors.amber
+                              : Colors.grey.shade200,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  review.comment,
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+                if (review.reviewImages.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 80,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: review.reviewImages.length,
+                      itemBuilder: (context, idx) {
+                        return GestureDetector(
+                          onTap: () => Get.to(
+                            () => const ImageViewerView(),
+                            arguments: review.reviewImages[idx],
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: CachedNetworkImage(
+                                imageUrl: review.reviewImages[idx],
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const ShimmerPlaceholder(
+                                      width: 80,
+                                      height: 80,
+                                      borderRadius: 10,
+                                    ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                review.comment,
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 13,
-                  height: 1.5,
-                ),
-              ),
-              if (review.reviewImages.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 80,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: review.reviewImages.length,
-                    itemBuilder: (context, idx) {
-                      return GestureDetector(
-                        onTap: () => Get.to(
-                          () => const ImageViewerView(),
-                          arguments: review.reviewImages[idx],
-                        ),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: CachedNetworkImage(
-                              imageUrl: review.reviewImages[idx],
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  const ShimmerPlaceholder(
-                                    width: 80,
-                                    height: 80,
-                                    borderRadius: 10,
-                                  ),
-                              errorWidget: (context, url, error) =>
-                                  const Icon(Icons.error),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                const SizedBox(height: 15),
+                Divider(color: Colors.grey.shade100),
               ],
-              const SizedBox(height: 15),
-              Divider(color: Colors.grey.shade100),
-            ],
-          ),
-        );
+            ),
+          );
+        } else {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 15),
+            child: Center(
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          );
+        }
       },
     );
   }

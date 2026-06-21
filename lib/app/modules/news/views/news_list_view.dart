@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/news_list_controller.dart';
 import '../../../data/models/news_model.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class NewsListView extends GetView<NewsListController> {
   const NewsListView({super.key});
@@ -17,6 +19,7 @@ class NewsListView extends GetView<NewsListController> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -33,7 +36,7 @@ class NewsListView extends GetView<NewsListController> {
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(10),
             color: Colors.white,
             child: Column(
               children: [
@@ -72,6 +75,7 @@ class NewsListView extends GetView<NewsListController> {
                         padding: const EdgeInsets.only(right: 10),
                         child: Obx(
                           () => ChoiceChip(
+                            showCheckmark: false,
                             label: Text(
                               categories[index],
                               style: TextStyle(
@@ -109,6 +113,13 @@ class NewsListView extends GetView<NewsListController> {
           Expanded(
             child: Obx(() {
               final newsData = controller.filteredNews;
+
+              if (controller.isLoading.value && newsData.isEmpty) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
+
               if (newsData.isEmpty) {
                 return Center(
                   child: Column(
@@ -128,19 +139,40 @@ class NewsListView extends GetView<NewsListController> {
                   ),
                 );
               }
+
               return ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: newsData.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: GestureDetector(
-                    onTap: () => Get.toNamed(
-                      Routes.NEWS_DETAIL,
-                      arguments: newsData[index],
-                    ),
-                    child: _newsCard(newsData[index]),
-                  ),
-                ),
+                controller: controller.scrollController,
+                padding: const EdgeInsets.all(10),
+                itemCount:
+                    newsData.length + (controller.isLoadMore.value ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < newsData.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: GestureDetector(
+                        onTap: () => Get.toNamed(
+                          Routes.NEWS_DETAIL,
+                          arguments: newsData[index],
+                        ),
+                        child: _newsCard(newsData[index]),
+                      ),
+                    );
+                  } else {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      child: Center(
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
               );
             }),
           ),
@@ -167,11 +199,17 @@ class NewsListView extends GetView<NewsListController> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.network(
-              news.image,
+            child: CachedNetworkImage(
+              imageUrl: news.image,
               width: 85,
               height: 85,
               fit: BoxFit.cover,
+              placeholder: (context, url) => const ShimmerPlaceholder(
+                width: 85,
+                height: 85,
+                borderRadius: 15,
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
           const SizedBox(width: 15),

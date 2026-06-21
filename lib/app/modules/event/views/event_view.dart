@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../routes/app_pages.dart';
 import '../../../widgets/main_header.dart';
 import '../controllers/event_controller.dart';
 import '../../../data/models/event_model.dart';
 import '../../../data/models/news_model.dart';
+import '../../main/controllers/controller.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class EventView extends GetView<EventController> {
   const EventView({super.key});
@@ -13,68 +16,90 @@ class EventView extends GetView<EventController> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = context.width;
+    final mainController = Get.find<MainController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const MainHeader(
-              title: "Event Tegal",
-              subtitle: "Temukan event menarik di Kota Tegal",
-              hintText: "Cari event di Tegal...",
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCategories(),
-                  const SizedBox(height: 30),
-                  Obx(() {
-                    if (controller.filteredOngoingEvents.isNotEmpty) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionHeader(
-                            "Sedang Berlangsung",
-                            isEvent: true,
-                          ),
-                          const SizedBox(height: 15),
-                          _buildOngoingSlider(),
-                          const SizedBox(height: 30),
-                        ],
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-                  _buildSectionHeader("Event Mendatang", isEvent: true),
-                  const SizedBox(height: 15),
-                  Obx(() {
-                    if (controller.filteredUpcomingEvents.isEmpty) {
-                      return _buildEmptyState(
-                        "Tidak ada event mendatang untuk kategori ini.",
-                      );
-                    }
-                    return _buildUpcomingEvents(screenWidth);
-                  }),
-                  const SizedBox(height: 30),
-                  _buildSectionHeader("Berita Tegal", isEvent: false),
-                  const SizedBox(height: 15),
-                  Obx(() {
-                    if (controller.filteredNews.isEmpty) {
-                      return _buildEmptyState(
-                        "Tidak ada berita untuk kategori ini.",
-                      );
-                    }
-                    return _buildNewsList(screenWidth);
-                  }),
-                  const SizedBox(height: 110),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchEventsData(),
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: CustomScrollView(
+          controller: mainController.eventScrollController,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics(),
+          ),
+          slivers: [
+            const SliverToBoxAdapter(
+              child: MainHeader(
+                title: "Event Tegal",
+                subtitle: "Temukan event menarik di Kota Tegal",
+                hintText: "Cari event di Tegal...",
               ),
             ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyEventCategoryDelegate(
+                child: Container(
+                  color: AppColors.background,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 10,
+                  ),
+                  child: _buildCategories(),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 15),
+                    Obx(() {
+                      if (controller.filteredOngoingEvents.isNotEmpty) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader(
+                              "Sedang Berlangsung",
+                              isEvent: true,
+                            ),
+                            const SizedBox(height: 15),
+                            _buildOngoingSlider(),
+                            const SizedBox(height: 30),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
+                    _buildSectionHeader("Event Mendatang", isEvent: true),
+                    const SizedBox(height: 15),
+                    Obx(() {
+                      if (controller.filteredUpcomingEvents.isEmpty) {
+                        return _buildEmptyState(
+                          "Tidak ada event mendatang untuk kategori ini.",
+                        );
+                      }
+                      return _buildUpcomingEvents(screenWidth);
+                    }),
+                    const SizedBox(height: 30),
+                    _buildSectionHeader("Berita Tegal", isEvent: false),
+                    const SizedBox(height: 15),
+                    Obx(() {
+                      if (controller.filteredNews.isEmpty) {
+                        return _buildEmptyState(
+                          "Tidak ada berita untuk kategori ini.",
+                        );
+                      }
+                      return _buildNewsList(screenWidth);
+                    }),
+                  ],
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
         ),
       ),
@@ -111,23 +136,24 @@ class EventView extends GetView<EventController> {
       {'icon': Icons.storefront_rounded, 'label': 'UMKM'},
       {'icon': Icons.school_rounded, 'label': 'Edukasi'},
     ];
-    return SizedBox(
-      height: 95,
-      child: Obx(() {
-        final int selected = controller.selectedCategoryIndex.value;
-        return ListView.builder(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final bool isActive = selected == index;
-            final cat = categories[index];
-            return GestureDetector(
-              onTap: () => controller.changeCategory(index),
-              child: Container(
+    return Obx(() {
+      final int selected = controller.selectedCategoryIndex.value;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(categories.length, (index) {
+          final bool isActive = selected == index;
+          final cat = categories[index];
+          return GestureDetector(
+            onTap: () => controller.changeCategory(index),
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: index == 0 ? 0 : 8,
+                right: index == categories.length - 1 ? 0 : 8,
+              ),
+              child: SizedBox(
                 width: 75,
-                margin: const EdgeInsets.only(right: 15),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
@@ -154,6 +180,7 @@ class EventView extends GetView<EventController> {
                     const SizedBox(height: 8),
                     Text(
                       cat['label'] as String,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: isActive
@@ -167,11 +194,11 @@ class EventView extends GetView<EventController> {
                   ],
                 ),
               ),
-            );
-          },
-        );
-      }),
-    );
+            ),
+          );
+        }),
+      );
+    });
   }
 
   Widget _buildSectionHeader(String title, {required bool isEvent}) {
@@ -244,11 +271,19 @@ class EventView extends GetView<EventController> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(28),
                         child: event.imageUrl != null
-                            ? Image.network(
-                                event.imageUrl!,
+                            ? CachedNetworkImage(
+                                imageUrl: event.imageUrl!,
                                 width: double.infinity,
                                 height: 200,
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    const ShimmerPlaceholder(
+                                      width: double.infinity,
+                                      height: 200,
+                                      borderRadius: 28,
+                                    ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
                               )
                             : Image.asset(
                                 'assets/images/login/cover_login.png',
@@ -416,11 +451,18 @@ class EventView extends GetView<EventController> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
                 child: event.imageUrl != null
-                    ? Image.network(
-                        event.imageUrl!,
+                    ? CachedNetworkImage(
+                        imageUrl: event.imageUrl!,
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
+                        placeholder: (context, url) => const ShimmerPlaceholder(
+                          width: 100,
+                          height: 100,
+                          borderRadius: 18,
+                        ),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
                       )
                     : Image.asset(
                         'assets/images/login/cover_login.png',
@@ -628,5 +670,31 @@ class EventView extends GetView<EventController> {
         ],
       ),
     );
+  }
+}
+
+class _StickyEventCategoryDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickyEventCategoryDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 110.0;
+
+  @override
+  double get minExtent => 110.0;
+
+  @override
+  bool shouldRebuild(covariant _StickyEventCategoryDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }

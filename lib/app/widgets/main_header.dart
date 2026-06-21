@@ -1,8 +1,13 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../data/app_colors.dart';
 import '../data/service/user_service.dart';
+import '../modules/event/controllers/event_controller.dart';
 import '../modules/main/controllers/controller.dart';
+import '../modules/explore/controllers/explore_controller.dart';
+import '../modules/home/controllers/home_controller.dart';
 import '../routes/app_pages.dart';
 
 class MainHeader extends StatelessWidget {
@@ -16,6 +21,28 @@ class MainHeader extends StatelessWidget {
     required this.subtitle,
     this.hintText = "Cari sesuatu...",
   });
+
+  bool _checkIsLoading() {
+    try {
+      if (Get.isRegistered<ExploreController>() &&
+          Get.find<ExploreController>().isLoading.value) {
+        return true;
+      }
+    } catch (_) {}
+    try {
+      if (Get.isRegistered<HomeController>() &&
+          Get.find<HomeController>().isLoading.value) {
+        return true;
+      }
+    } catch (_) {}
+    try {
+      if (Get.isRegistered<EventController>() &&
+          Get.find<EventController>().isLoading.value) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,16 +84,27 @@ class MainHeader extends StatelessWidget {
                     const SizedBox(height: 4),
                     Obx(() {
                       final user = UserService.to.user.value;
-                      final displayName =
-                          user?.name ??
-                          "Pengguna Aplikasi";
-                      return Text(
-                        "Halo, $displayName!",
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      final displayName = user?.name ?? "Pengguna Aplikasi";
+
+                      final displaySubtitle = title == "Tegal Culture"
+                          ? "Halo, $displayName!"
+                          : subtitle;
+
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              displaySubtitle,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       );
                     }),
                   ],
@@ -78,27 +116,12 @@ class MainHeader extends StatelessWidget {
                   const SizedBox(width: 12),
                   Obx(() {
                     final user = UserService.to.user.value;
-                    final hasPhoto =
-                        user?.profilePicture != null &&
-                        user!.profilePicture!.isNotEmpty;
+                    final bool isLoading = _checkIsLoading();
 
-                    return GestureDetector(
-                      onTap: () {
-                        Get.find<MainController>().changePage(4);
-                      },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.white24,
-                        backgroundImage: hasPhoto
-                            ? NetworkImage(user.profilePicture!)
-                            : null,
-                        child: !hasPhoto
-                            ? const Icon(
-                                Icons.person_rounded,
-                                color: Colors.white,
-                              )
-                            : null,
-                      ),
+                    return SpinningGlowAvatar(
+                      imageUrl: user?.profilePicture,
+                      radius: 20,
+                      isRefreshing: isLoading,
                     );
                   }),
                 ],
@@ -228,6 +251,162 @@ class MainHeader extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class SpinningGlowAvatar extends StatefulWidget {
+  final String? imageUrl;
+  final double radius;
+  final bool isRefreshing;
+
+  const SpinningGlowAvatar({
+    super.key,
+    this.imageUrl,
+    this.radius = 20.0,
+    this.isRefreshing = false,
+  });
+
+  @override
+  State<SpinningGlowAvatar> createState() => _SpinningGlowAvatarState();
+}
+
+class _SpinningGlowAvatarState extends State<SpinningGlowAvatar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    if (widget.isRefreshing) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant SpinningGlowAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRefreshing != oldWidget.isRefreshing) {
+      if (widget.isRefreshing) {
+        _controller.repeat();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasPhoto =
+        widget.imageUrl != null && widget.imageUrl!.isNotEmpty;
+
+    final Widget innerAvatar = GestureDetector(
+      onTap: () {
+        Get.find<MainController>().changePage(4);
+      },
+      child: CircleAvatar(
+        radius: widget.radius,
+        backgroundColor: Colors.white24,
+        child: ClipOval(
+          child: hasPhoto
+              ? CachedNetworkImage(
+                  imageUrl: widget.imageUrl!,
+                  fit: BoxFit.cover,
+                  width: widget.radius * 2,
+                  height: widget.radius * 2,
+                  placeholder: (context, url) => const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => const Icon(
+                    Icons.person_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                )
+              : const Icon(Icons.person_rounded, color: Colors.white, size: 20),
+        ),
+      ),
+    );
+
+    return SizedBox(
+      width: (widget.radius + 3) * 2,
+      height: (widget.radius + 3) * 2,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOut,
+            opacity: widget.isRefreshing ? 1.0 : 0.0,
+            onEnd: () {
+              if (!widget.isRefreshing) {
+                _controller.stop();
+                _controller.reset();
+              }
+            },
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _controller.value * 2 * math.pi,
+                  child: Container(
+                    width: (widget.radius + 3) * 2,
+                    height: (widget.radius + 3) * 2,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: SweepGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withOpacity(0.2),
+                          Colors.white.withOpacity(0.6),
+                          Colors.white,
+                        ],
+                        stops: const [0.0, 0.4, 0.8, 1.0],
+                      ),
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.all(0.8),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 400),
+            opacity: widget.isRefreshing ? 0.0 : 1.0,
+            child: Container(
+              width: (widget.radius + 3) * 2,
+              height: (widget.radius + 3) * 2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.5),
+                  width: 0.8,
+                ),
+              ),
+            ),
+          ),
+          innerAvatar,
+        ],
       ),
     );
   }

@@ -12,6 +12,17 @@ class NewsModel {
     required this.category,
     required this.date,
     required this.image,
-    this.content = "Berita selengkapnya belum tersedia untuk saat ini, namun ini adalah representasi paragraf berita yang panjang agar UI terlihat penuh dan profesional. Kota Tegal terus berinovasi dalam memajukan budaya dan pariwisata daerah. Berbagai event menarik diselenggarakan untuk menarik minat wisatawan lokal maupun mancanegara.",
+    required this.content,
   });
+
+  factory NewsModel.fromJson(Map<String, dynamic> json) {
+    return NewsModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
+      date: json['date']?.toString() ?? '',
+      image: json['image']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
+    );
+  }
 }

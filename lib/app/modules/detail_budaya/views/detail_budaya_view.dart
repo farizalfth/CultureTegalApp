@@ -15,171 +15,176 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
 
   @override
   Widget build(BuildContext context) {
-    final culture = controller.culture;
-    final List<String> displayGallery = culture.gallery.isEmpty
-        ? [culture.image]
-        : culture.gallery;
+    return GetBuilder<DetailBudayaController>(
+      builder: (controller) {
+        final culture = controller.culture;
+        final List<String> displayGallery = culture.gallery.isEmpty
+            ? [culture.image]
+            : culture.gallery;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        height: 350,
-                        width: double.infinity,
-                        child: PageView.builder(
-                          controller: controller.pageController,
-                          onPageChanged: (index) =>
-                              controller.currentIndex.value = index,
-                          itemCount: displayGallery.length > 5
-                              ? 5
-                              : displayGallery.length,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () => Get.to(
-                                () => const ImageViewerView(),
-                                arguments: displayGallery[index],
-                              ),
-                              child: CachedNetworkImage(
-                                imageUrl: displayGallery[index],
-                                width: double.infinity,
-                                height: 350,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    const ShimmerPlaceholder(
-                                      width: double.infinity,
-                                      height: 350,
-                                    ),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: 80,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.white.withOpacity(0.8),
-                                Colors.transparent,
-                              ],
+                      Stack(
+                        children: [
+                          SizedBox(
+                            height: 350,
+                            width: double.infinity,
+                            child: PageView.builder(
+                              controller: controller.pageController,
+                              onPageChanged: (index) =>
+                                  controller.currentIndex.value = index,
+                              itemCount: displayGallery.length > 5
+                                  ? 5
+                                  : displayGallery.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                  onTap: () => Get.to(
+                                    () => const ImageViewerView(),
+                                    arguments: displayGallery[index],
+                                  ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: displayGallery[index],
+                                    width: double.infinity,
+                                    height: 350,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) =>
+                                        const ShimmerPlaceholder(
+                                          width: double.infinity,
+                                          height: 350,
+                                        ),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
+                                  ),
+                                );
+                              },
                             ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: 80,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Colors.white.withOpacity(0.8),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -25),
+                        child: Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(30),
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      culture.title,
+                                      style: const TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accent.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      culture.category,
+                                      style: const TextStyle(
+                                        color: AppColors.accent,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.home_work_rounded,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    culture.subtitle,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              _buildInfoBar(),
+                              const SizedBox(height: 24),
+                              _buildDescriptionSection(),
+                              const SizedBox(height: 24),
+                              if (culture.gallery.isNotEmpty) ...[
+                                _buildGallerySection(),
+                                const SizedBox(height: 24),
+                              ],
+                              _buildFunFactSection(),
+                              const SizedBox(height: 24),
+                              if (culture.facilities.isNotEmpty) ...[
+                                _buildFacilitiesSection(),
+                                const SizedBox(height: 24),
+                              ],
+                              _buildReviewsSection(),
+                              const SizedBox(height: 100),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
-                  Transform.translate(
-                    offset: const Offset(0, -25),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(30),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  culture.title,
-                                  style: const TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accent.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  culture.category,
-                                  style: const TextStyle(
-                                    color: AppColors.accent,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.home_work_rounded,
-                                color: AppColors.primary,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                culture.subtitle,
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          _buildInfoBar(),
-                          const SizedBox(height: 24),
-                          _buildDescriptionSection(),
-                          const SizedBox(height: 24),
-                          if (culture.gallery.isNotEmpty) ...[
-                            _buildGallerySection(),
-                            const SizedBox(height: 24),
-                          ],
-                          _buildFunFactSection(),
-                          const SizedBox(height: 24),
-                          if (culture.facilities.isNotEmpty) ...[
-                            _buildFacilitiesSection(),
-                            const SizedBox(height: 24),
-                          ],
-                          _buildReviewsSection(),
-                          const SizedBox(height: 100),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              _buildTopBar(context),
+              _buildBottomActionButtons(),
+            ],
           ),
-          _buildTopBar(context),
-          _buildBottomActionButtons(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -367,16 +372,24 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 color: Colors.black87,
               ),
             ),
-            GestureDetector(
-              onTap: () =>
+            TextButton(
+              onPressed: () =>
                   Get.to(() => const GalleryView(), arguments: gallery),
-              child: Text(
-                "Lihat Semua",
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                "Lihat Semua",
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -538,16 +551,24 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 color: Colors.black87,
               ),
             ),
-            GestureDetector(
-              onTap: () =>
+            TextButton(
+              onPressed: () =>
                   Get.toNamed(Routes.REVIEWS, arguments: controller.culture),
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text(
                 "Lihat Semua",
-                style: TextStyle(
-                  color: AppColors.accent,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ),
           ],
