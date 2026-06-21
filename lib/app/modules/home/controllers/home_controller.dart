@@ -100,16 +100,20 @@ class HomeController extends GetxController {
   Future<void> loadAllData() async {
     try {
       isLoading.value = true;
-      await Future.wait([UserService.to.refreshUserData()]);
-    } catch (e) {
-      debugPrint("Gagal memperbarui data halaman beranda: $e");
+      await Future.wait([
+        UserService.to.refreshUserData(),
+        Future.delayed(const Duration(seconds: 1)),
+      ]);
     } finally {
       isLoading.value = false;
     }
   }
 
   void onScanTap() {}
+
   void onProfileTap() {}
+
   void onMenuTap(String menuName) {}
+
   void onSeeAllMarketplace() {}
 }

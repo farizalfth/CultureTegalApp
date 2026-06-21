@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/event_list_controller.dart';
 import '../../../data/models/event_model.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class EventListView extends GetView<EventListController> {
   const EventListView({super.key});
@@ -12,31 +14,27 @@ class EventListView extends GetView<EventListController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.black87,
-          ),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          "Daftar Event",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.fromLTRB(
+              10,
+              context.mediaQueryPadding.top + 10,
+              10,
+              10,
+            ),
             color: Colors.white,
             child: Column(
               children: [
                 Row(
                   children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.black87,
+                      ),
+                      onPressed: () => Get.back(),
+                    ),
                     Expanded(
                       child: Container(
                         height: 50,
@@ -117,18 +115,38 @@ class EventListView extends GetView<EventListController> {
                 );
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: events.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: GestureDetector(
-                    onTap: () => Get.toNamed(
-                      Routes.DETAIL_EVENT,
-                      arguments: events[index],
-                    ),
-                    child: _eventCard(events[index]),
-                  ),
-                ),
+                controller: controller.scrollController,
+                padding: const EdgeInsets.all(10),
+                itemCount:
+                    events.length + (controller.isLoadMore.value ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < events.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: GestureDetector(
+                        onTap: () => Get.toNamed(
+                          Routes.DETAIL_EVENT,
+                          arguments: events[index],
+                        ),
+                        child: _eventCard(events[index]),
+                      ),
+                    );
+                  } else {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      child: Center(
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
               );
             }),
           ),
@@ -139,7 +157,7 @@ class EventListView extends GetView<EventListController> {
 
   Widget _buildFilterPanel() {
     final categories = ["Semua", "Budaya", "UMKM", "Edukasi"];
-    final statuses = ["Semua", "Ongoing", "Upcoming"];
+    final statuses = ["Semua", "Berjalan", "Mendatang", "Selesai"];
 
     return Padding(
       padding: const EdgeInsets.only(top: 20),
@@ -150,53 +168,59 @@ class EventListView extends GetView<EventListController> {
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(
-                categories.length,
-                (index) => Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: ChoiceChip(
-                    label: Text(
-                      categories[index],
-                      style: TextStyle(
-                        color: controller.selectedCategoryIndex.value == index
-                            ? Colors.white
-                            : Colors.black87,
-                      ),
-                    ),
-                    selected: controller.selectedCategoryIndex.value == index,
-                    selectedColor: AppColors.primary,
-                    onSelected: (val) => controller.setCategory(index),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 15),
-          const Text("Status", style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Row(
-            children: statuses
-                .map(
-                  (status) => Padding(
+            child: Obx(() {
+              return Row(
+                children: List.generate(
+                  categories.length,
+                  (index) => Padding(
                     padding: const EdgeInsets.only(right: 10),
                     child: ChoiceChip(
+                      showCheckmark: false,
                       label: Text(
-                        status,
+                        categories[index],
                         style: TextStyle(
-                          color: controller.selectedStatus.value == status
+                          color: controller.selectedCategoryIndex.value == index
                               ? Colors.white
                               : Colors.black87,
                         ),
                       ),
-                      selected: controller.selectedStatus.value == status,
-                      selectedColor: AppColors.accent,
-                      onSelected: (val) => controller.setStatus(status),
+                      selected: controller.selectedCategoryIndex.value == index,
+                      selectedColor: AppColors.primary,
+                      onSelected: (val) => controller.setCategory(index),
                     ),
                   ),
-                )
-                .toList(),
+                ),
+              );
+            }),
           ),
+          const SizedBox(height: 15),
+          const Text("Status", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Obx(() {
+            return Row(
+              children: statuses
+                  .map(
+                    (status) => Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: ChoiceChip(
+                        showCheckmark: false,
+                        label: Text(
+                          status,
+                          style: TextStyle(
+                            color: controller.selectedStatus.value == status
+                                ? Colors.white
+                                : Colors.black87,
+                          ),
+                        ),
+                        selected: controller.selectedStatus.value == status,
+                        selectedColor: AppColors.accent,
+                        onSelected: (val) => controller.setStatus(status),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            );
+          }),
         ],
       ),
     );
@@ -223,11 +247,18 @@ class EventListView extends GetView<EventListController> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
                 child: event.imageUrl != null
-                    ? Image.network(
-                        event.imageUrl!,
+                    ? CachedNetworkImage(
+                        imageUrl: event.imageUrl!,
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
+                        placeholder: (context, url) => const ShimmerPlaceholder(
+                          width: 100,
+                          height: 100,
+                          borderRadius: 18,
+                        ),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
                       )
                     : Image.asset(
                         'assets/images/login/cover_login.png',

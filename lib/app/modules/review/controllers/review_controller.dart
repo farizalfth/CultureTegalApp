@@ -11,19 +11,87 @@ import '../../explore/controllers/explore_controller.dart';
 
 class ReviewController extends GetxController {
   final CultureProvider _cultureProvider = Get.find<CultureProvider>();
+  final ScrollController scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
 
   late CultureModel culture;
   final rating = 0.obs;
   final TextEditingController commentController = TextEditingController();
-  final isSubmitting = false.obs;
 
+  final isSubmitting = false.obs;
   final selectedImages = <String>[].obs;
+
+  var isLoading = false.obs;
+  var isLoadMore = false.obs;
+  var currentPage = 1;
+  var hasNextPage = true.obs;
+  final RxList<ReviewModel> reviewsList = <ReviewModel>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     culture = Get.arguments as CultureModel;
+    scrollController.addListener(_scrollListener);
+    fetchInitialReviews();
+  }
+
+  void _scrollListener() {
+    if (scrollController.position.pixels >=
+        scrollController.position.maxScrollExtent - 200) {
+      if (hasNextPage.value && !isLoadMore.value && !isLoading.value) {
+        loadMoreReviews();
+      }
+    }
+  }
+
+  Future<void> fetchInitialReviews() async {
+    try {
+      isLoading.value = true;
+      currentPage = 1;
+      hasNextPage.value = true;
+
+      final data = await _cultureProvider.getPaginatedReviews(
+        culture.id,
+        page: currentPage,
+        perPage: 10,
+      );
+      final List<dynamic> rawItems = data['items'] ?? [];
+      final List<ReviewModel> items = rawItems
+          .map((item) => ReviewModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      reviewsList.assignAll(items);
+      hasNextPage.value = data['has_next'] as bool? ?? false;
+    } catch (e) {
+      debugPrint("Gagal memuat ulasan awal: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadMoreReviews() async {
+    try {
+      isLoadMore.value = true;
+      currentPage++;
+
+      final data = await _cultureProvider.getPaginatedReviews(
+        culture.id,
+        page: currentPage,
+        perPage: 10,
+      );
+      final List<dynamic> rawItems = data['items'] ?? [];
+      final List<ReviewModel> items = rawItems
+          .map((item) => ReviewModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      reviewsList.addAll(items);
+      hasNextPage.value = data['has_next'] as bool? ?? false;
+    } catch (e) {
+      currentPage--;
+      debugPrint("Gagal memuat halaman ulasan berikutnya: $e");
+    } finally {
+      isLoadMore.value = false;
+    }
   }
 
   String? get currentUserId {
@@ -37,32 +105,32 @@ class ReviewController extends GetxController {
 
   ReviewModel? get ownReview {
     final String? uid = currentUserId;
-    if (uid == null || culture.reviews.isEmpty) return null;
-    return culture.reviews.firstWhereOrNull((r) => r.userId == uid);
+    if (uid == null || reviewsList.isEmpty) return null;
+    return reviewsList.firstWhereOrNull((r) => r.userId == uid);
   }
 
   List<ReviewModel> get otherReviews {
     final String? uid = currentUserId;
-    if (uid == null) return culture.reviews;
-    return culture.reviews.where((r) => r.userId != uid).toList();
+    if (uid == null) return reviewsList;
+    return reviewsList.where((r) => r.userId != uid).toList();
   }
 
   double get averageRating {
-    if (culture.reviews.isEmpty) return 0.0;
+    if (reviewsList.isEmpty) return 0.0;
     double total = 0;
-    for (var review in culture.reviews) {
+    for (var review in reviewsList) {
       total += review.rating;
     }
-    return total / culture.reviews.length;
+    return total / reviewsList.length;
   }
 
   int countStars(int star) {
-    return culture.reviews.where((r) => r.rating.toInt() == star).length;
+    return reviewsList.where((r) => r.rating.toInt() == star).length;
   }
 
   double starPercentage(int star) {
-    if (culture.reviews.isEmpty) return 0.0;
-    return countStars(star) / culture.reviews.length;
+    if (reviewsList.isEmpty) return 0.0;
+    return countStars(star) / reviewsList.length;
   }
 
   Future<void> pickImage(ImageSource source) async {
@@ -81,7 +149,7 @@ class ReviewController extends GetxController {
         source: source,
         maxWidth: 1024,
         maxHeight: 1024,
-        imageQuality: 70, // Kompresi native GPU 70% hemat penyimpanan & kuota
+        imageQuality: 70,
       );
       if (pickedFile != null) {
         selectedImages.add(pickedFile.path);
@@ -136,9 +204,7 @@ class ReviewController extends GetxController {
       bool success;
       List<String> imagesBase64 = [];
 
-      final activeImages = selectedImages
-          .take(3)
-          .toList(); // Jaminan pengaman maksimal 3 di Flutter
+      final activeImages = selectedImages.take(3).toList();
 
       for (String path in activeImages) {
         if (path.startsWith('http')) {
@@ -174,6 +240,7 @@ class ReviewController extends GetxController {
           colorText: Colors.white,
         );
         await _syncData();
+        await fetchInitialReviews();
       }
     } catch (e) {
       Get.snackbar(
@@ -203,6 +270,7 @@ class ReviewController extends GetxController {
           colorText: Colors.white,
         );
         await _syncData();
+        await fetchInitialReviews();
       }
     } catch (e) {
       Get.snackbar(
@@ -235,6 +303,7 @@ class ReviewController extends GetxController {
 
   @override
   void onClose() {
+    scrollController.dispose();
     commentController.dispose();
     super.onClose();
   }

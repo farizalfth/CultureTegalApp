@@ -63,7 +63,12 @@ class CultureProvider extends GetConnect {
     }
   }
 
-  Future<bool> postReview(String siteId, double rating, String comment, {List<String>? reviewImagesBase64}) async {
+  Future<bool> postReview(
+    String siteId,
+    double rating,
+    String comment, {
+    List<String>? reviewImagesBase64,
+  }) async {
     try {
       final response = await post('/explore/$siteId/reviews', {
         'rating': rating,
@@ -82,7 +87,12 @@ class CultureProvider extends GetConnect {
     }
   }
 
-  Future<bool> putReview(String siteId, double rating, String comment, {List<String>? reviewImagesBase64}) async {
+  Future<bool> putReview(
+    String siteId,
+    double rating,
+    String comment, {
+    List<String>? reviewImagesBase64,
+  }) async {
     try {
       final response = await put('/explore/$siteId/reviews', {
         'rating': rating,
@@ -91,7 +101,9 @@ class CultureProvider extends GetConnect {
       });
 
       if (response.status.hasError) {
-        throw Exception(response.body?['message'] ?? "Gagal memperbarui ulasan");
+        throw Exception(
+          response.body?['message'] ?? "Gagal memperbarui ulasan",
+        );
       }
 
       final Map<String, dynamic>? body = response.body;
@@ -111,6 +123,31 @@ class CultureProvider extends GetConnect {
 
       final Map<String, dynamic>? body = response.body;
       return body != null && body['status'] == 'success';
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getPaginatedReviews(
+    String siteId, {
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    try {
+      final response = await get(
+        '/explore/$siteId/reviews/list?page=$page&per_page=$perPage',
+      );
+
+      if (response.status.hasError) {
+        throw Exception("Gagal menghubungi server: ${response.statusText}");
+      }
+
+      final Map<String, dynamic>? body = response.body;
+      if (body != null && body['status'] == 'success') {
+        return body['data'] ?? {};
+      } else {
+        throw Exception(body?['message'] ?? "Format respon tidak valid");
+      }
     } catch (e) {
       rethrow;
     }

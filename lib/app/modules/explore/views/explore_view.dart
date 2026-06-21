@@ -6,68 +6,72 @@ import '../../../data/models/culture_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../widgets/main_header.dart';
 import '../controllers/explore_controller.dart';
+import '../../main/controllers/controller.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class ExploreView extends GetView<ExploreController> {
   const ExploreView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final mainController = Get.find<MainController>();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: () => controller.fetchCulturesData(),
         color: AppColors.primary,
         backgroundColor: Colors.white,
-        child: SingleChildScrollView(
+        child: CustomScrollView(
+          controller: mainController.exploreScrollController,
           physics: const AlwaysScrollableScrollPhysics(
             parent: ClampingScrollPhysics(),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const MainHeader(
+          slivers: [
+            const SliverToBoxAdapter(
+              child: MainHeader(
                 title: "Jelajah Budaya",
                 subtitle: "Temukan keindahan budaya Kota Tegal",
                 hintText: "Cari tempat budaya...",
               ),
-              Obx(() {
-                if (controller.hasError.value) {
-                  return _buildErrorState();
-                }
-
-                if (controller.isLoading.value && controller.allData.isEmpty) {
-                  return _buildLoadingState();
-                }
-
-                return Padding(
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyCategoryDelegate(
+                child: Container(
+                  color: AppColors.background,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 25,
+                    vertical: 12,
+                    horizontal: 10,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildCategoryTabs(),
-                      const SizedBox(height: 30),
-                      Obx(() {
-                        final sliderItems = controller.activeSliderItems;
-                        final places = controller.filteredPlaces;
+                  child: _buildCategoryTabs(),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              sliver: SliverToBoxAdapter(
+                child: Obx(() {
+                  if (controller.hasError.value) {
+                    return _buildErrorState();
+                  }
 
-                        return controller.selectedCategoryIndex.value == 0
-                            ? _buildSemuaLayout(context, sliderItems, places)
-                            : _buildFilteredLayout(
-                                context,
-                                sliderItems,
-                                places,
-                              );
-                      }),
-                      const SizedBox(height: 110),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
+                  if (controller.isLoading.value &&
+                      controller.allData.isEmpty) {
+                    return _buildLoadingState();
+                  }
+
+                  final sliderItems = controller.activeSliderItems;
+                  final places = controller.filteredPlaces;
+
+                  return controller.selectedCategoryIndex.value == 0
+                      ? _buildSemuaLayout(context, sliderItems, places)
+                      : _buildFilteredLayout(context, sliderItems, places);
+                }),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+          ],
         ),
       ),
     );
@@ -221,7 +225,11 @@ class ExploreView extends GetView<ExploreController> {
                           height: 200,
                           fit: BoxFit.cover,
                           placeholder: (context, url) =>
-                              const Center(child: CircularProgressIndicator()),
+                              const ShimmerPlaceholder(
+                                width: double.infinity,
+                                height: 200,
+                                borderRadius: 28,
+                              ),
                           errorWidget: (context, url, error) =>
                               const Icon(Icons.error),
                         ),
@@ -324,65 +332,55 @@ class ExploreView extends GetView<ExploreController> {
       {'icon': Icons.restaurant_rounded, 'label': 'Kuliner'},
       {'icon': Icons.terrain_rounded, 'label': 'Wisata'},
     ];
-    return SizedBox(
-      height: 95,
-      child: Obx(() {
-        final int selected = controller.selectedCategoryIndex.value;
-        return ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: categories.length,
-          clipBehavior: Clip.none,
-          itemBuilder: (context, index) {
-            final bool isActive = selected == index;
-            return GestureDetector(
-              onTap: () => controller.changeCategory(index),
-              child: Padding(
-                padding: const EdgeInsets.only(right: 15),
-                child: Column(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.accent : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          if (isActive)
-                            BoxShadow(
-                              color: AppColors.accent.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                        ],
-                      ),
-                      child: Icon(
-                        categories[index]['icon'] as IconData,
-                        color: isActive
-                            ? Colors.white
-                            : AppColors.primary.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      categories[index]['label'] as String,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isActive
-                            ? FontWeight.bold
-                            : FontWeight.w500,
-                        color: isActive
-                            ? AppColors.accent
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
+
+    return Obx(() {
+      final int selected = controller.selectedCategoryIndex.value;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(categories.length, (index) {
+          final bool isActive = selected == index;
+          return GestureDetector(
+            onTap: () => controller.changeCategory(index),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isActive ? AppColors.accent : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      if (isActive)
+                        BoxShadow(
+                          color: AppColors.accent.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                    ],
+                  ),
+                  child: Icon(
+                    categories[index]['icon'] as IconData,
+                    color: isActive
+                        ? Colors.white
+                        : AppColors.primary.withOpacity(0.7),
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      }),
-    );
+                const SizedBox(height: 8),
+                Text(
+                  categories[index]['label'] as String,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                    color: isActive ? AppColors.accent : Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      );
+    });
   }
 
   Widget _buildPopularCategories() {
@@ -435,8 +433,11 @@ class ExploreView extends GetView<ExploreController> {
                   height: 110,
                   width: 180,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      const Center(child: CircularProgressIndicator()),
+                  placeholder: (context, url) => const ShimmerPlaceholder(
+                    width: 180,
+                    height: 110,
+                    borderRadius: 24,
+                  ),
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               ),
@@ -585,8 +586,11 @@ class ExploreView extends GetView<ExploreController> {
               width: 90,
               height: 90,
               fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  const Center(child: CircularProgressIndicator()),
+              placeholder: (context, url) => const ShimmerPlaceholder(
+                width: 90,
+                height: 90,
+                borderRadius: 18,
+              ),
               errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
@@ -708,15 +712,49 @@ class ExploreView extends GetView<ExploreController> {
             color: Colors.black87,
           ),
         ),
-        Text(
-          action,
-          style: const TextStyle(
-            color: AppColors.accent,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
+        TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(
+            minimumSize: Size.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor: AppColors.accent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Text(
+            action,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
         ),
       ],
     );
+  }
+}
+
+class _StickyCategoryDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickyCategoryDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 110.0;
+
+  @override
+  double get minExtent => 110.0;
+
+  @override
+  bool shouldRebuild(covariant _StickyCategoryDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }

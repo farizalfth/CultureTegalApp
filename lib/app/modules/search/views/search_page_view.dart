@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/search_page_controller.dart';
+import '../../../data/models/models.dart';
+import '../../../data/models/event_model.dart';
+import '../../../data/models/news_model.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class SearchPageView extends GetView<SearchPageController> {
   const SearchPageView({super.key});
@@ -15,10 +21,11 @@ class SearchPageView extends GetView<SearchPageController> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
+          scrolledUnderElevation: 0,
           automaticallyImplyLeading: false,
           titleSpacing: 0,
           title: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
                 GestureDetector(
@@ -85,14 +92,14 @@ class SearchPageView extends GetView<SearchPageController> {
         body: Column(
           children: [
             _buildFilterBar(),
-            const Expanded(
+            Expanded(
               child: TabBarView(
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Center(child: Text("Hasil Pencarian Jelajah")),
-                  Center(child: Text("Hasil Pencarian UMKM")),
-                  Center(child: Text("Hasil Pencarian Event")),
-                  Center(child: Text("Hasil Pencarian Berita")),
+                  _buildCulturesResultList(),
+                  const Center(child: Text("Hasil Pencarian UMKM")),
+                  _buildEventsResultList(),
+                  _buildNewsResultList(),
                 ],
               ),
             ),
@@ -104,7 +111,7 @@ class SearchPageView extends GetView<SearchPageController> {
 
   Widget _buildFilterBar() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
@@ -207,6 +214,183 @@ class SearchPageView extends GetView<SearchPageController> {
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildCulturesResultList() {
+    return Obx(() {
+      final list = controller.filteredCultures;
+      if (list.isEmpty) return _buildEmptyState();
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final item = list[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Get.toNamed(Routes.DETAIL_BUDAYA, arguments: item),
+              child: _customCard(
+                item.title,
+                item.category,
+                item.image,
+                item.subtitle,
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildEventsResultList() {
+    return Obx(() {
+      final list = controller.filteredEvents;
+      if (list.isEmpty) return _buildEmptyState();
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final item = list[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Get.toNamed(Routes.DETAIL_EVENT, arguments: item),
+              child: _customCard(
+                item.name,
+                item.category,
+                item.imageUrl ?? "",
+                item.location,
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildNewsResultList() {
+    return Obx(() {
+      final list = controller.filteredNews;
+      if (list.isEmpty) return _buildEmptyState();
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final item = list[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Get.toNamed(Routes.NEWS_DETAIL, arguments: item),
+              child: _customCard(
+                item.title,
+                item.category,
+                item.image,
+                item.date,
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          const Text(
+            "Tidak ada hasil ditemukan",
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _customCard(String title, String tag, String imgUrl, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: CachedNetworkImage(
+              imageUrl: imgUrl,
+              width: 85,
+              height: 85,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const ShimmerPlaceholder(
+                width: 85,
+                height: 85,
+                borderRadius: 15,
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    tag,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.grey, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

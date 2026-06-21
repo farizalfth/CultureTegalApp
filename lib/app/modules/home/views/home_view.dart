@@ -4,6 +4,7 @@ import '../../../data/app_colors.dart';
 import '../../../data/service/user_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../../widgets/main_header.dart';
+import '../../event/controllers/event_controller.dart';
 import '../../main/controllers/controller.dart';
 import '../controllers/home_controller.dart';
 import '../../../data/models/event_model.dart';
@@ -16,6 +17,7 @@ class HomeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     final double screenWidth = context.width;
     final double screenHeight = context.height;
+    final mainController = Get.find<MainController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -24,33 +26,40 @@ class HomeView extends GetView<HomeController> {
         color: AppColors.primary,
         backgroundColor: Colors.white,
         child: SingleChildScrollView(
+          controller: mainController.homeScrollController,
           physics: const AlwaysScrollableScrollPhysics(
             parent: ClampingScrollPhysics(),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Obx(() {
-                final user = UserService.to.user.value;
-                final displayName = user?.name ?? "Nadhif Basalamah";
-                return MainHeader(
-                  title: "Tegal Culture",
-                  subtitle: "Halo, $displayName!",
-                  hintText: "Cari budaya Tegal...",
-                );
-              }),
-              _buildMenuGrid(),
-              _buildSectionHeader("Event Budaya", () {
-                Get.find<MainController>().currentIndex.value = 2;
-              }),
-              _buildRunningEvents(screenWidth, screenHeight),
-              _buildSectionHeader("Marketplace UMKM", () {}),
-              _buildHorizontalProducts(screenWidth, screenHeight),
-              _buildSectionHeader(
-                "Berita Tegal",
-                () => Get.toNamed(Routes.NEWS_LIST),
+              const MainHeader(
+                title: "Tegal Culture",
+                subtitle: "",
+                hintText: "Cari budaya Tegal...",
               ),
-              _buildNewsList(screenWidth),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildMenuGrid(),
+                    _buildSectionHeader("Event Budaya", () {
+                      mainController.changePage(3);
+                    }),
+                    _buildRunningEvents(screenWidth, screenHeight),
+                    _buildSectionHeader("Marketplace UMKM", () {
+                      mainController.changePage(2);
+                    }),
+                    _buildHorizontalProducts(screenWidth, screenHeight),
+                    _buildSectionHeader(
+                      "Berita Tegal",
+                      () => Get.toNamed(Routes.NEWS_LIST),
+                    ),
+                    _buildNewsList(screenWidth),
+                  ],
+                ),
+              ),
               SizedBox(height: context.mediaQueryPadding.bottom + 110),
             ],
           ),
@@ -60,8 +69,10 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildMenuGrid() {
+    final mainController = Get.find<MainController>();
+
     return GridView.count(
-      padding: const EdgeInsets.fromLTRB(20, 25, 20, 10),
+      padding: const EdgeInsets.only(top: 25, bottom: 10),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
@@ -73,19 +84,36 @@ class HomeView extends GetView<HomeController> {
           "Smart Culture",
           Icons.auto_awesome_rounded,
           AppColors.cardBlue,
+          onTap: () {},
         ),
         _menuCard(
           "Jelajah Budaya",
           Icons.explore_rounded,
           AppColors.cardOrange,
+          onTap: () => mainController.changePage(1),
         ),
-        _menuCard("Toko Budaya", Icons.local_mall_rounded, AppColors.cardRed),
-        _menuCard("Kuis Budaya", Icons.quiz_rounded, AppColors.cardBrown),
+        _menuCard(
+          "Toko Budaya",
+          Icons.local_mall_rounded,
+          AppColors.cardRed,
+          onTap: () => mainController.changePage(2),
+        ),
+        _menuCard(
+          "Kuis Budaya",
+          Icons.quiz_rounded,
+          AppColors.cardBrown,
+          onTap: () => Get.toNamed('/kuis-budaya'),
+        ),
       ],
     );
   }
 
-  Widget _menuCard(String title, IconData icon, Color color) {
+  Widget _menuCard(
+    String title,
+    IconData icon,
+    Color color, {
+    required VoidCallback onTap,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -101,7 +129,7 @@ class HomeView extends GetView<HomeController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(18),
@@ -137,7 +165,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildSectionHeader(String title, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 15),
+      padding: const EdgeInsets.symmetric(vertical: 15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -176,7 +204,6 @@ class HomeView extends GetView<HomeController> {
       child: Obx(
         () => ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(left: 20),
           physics: const BouncingScrollPhysics(),
           itemCount: controller.events.length,
           itemBuilder: (context, index) {
@@ -362,7 +389,6 @@ class HomeView extends GetView<HomeController> {
       height: height * 0.34,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(left: 20),
         physics: const BouncingScrollPhysics(),
         children: [
           _productCard(
@@ -510,40 +536,37 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildNewsList(double width) {
-    final List<NewsModel> dummyNews = [
-      NewsModel(
-        id: "n1",
-        title: "Gereja Blenduk Jadi Ikon Sejarah Kota Tegal",
-        category: "Budaya",
-        date: "20 Mei 2024",
-        image:
-            "https://radarcbs.com/assets/images/1770943164_1840ce5bbf3c827b7d85.jpg",
-      ),
-      NewsModel(
-        id: "n2",
-        title: "Tahu Aci Khas Tegal Semakin Diminati Wisatawan",
-        category: "Kuliner",
-        date: "19 Mei 2024",
-        image:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQviHVXAO_su-hxtU7dqtrRCwBZMM0BotQGBs1hwfk9b_4_uJ0e-Njlzm2_dIjurP5kD8-00rKiMNkG9XSjQ3sKxQr_Fs3Ig_FwD8p84g&s=10",
-      ),
-    ];
+    if (!Get.isRegistered<EventController>()) {
+      return const SizedBox.shrink();
+    }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: dummyNews
-            .map(
-              (news) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: GestureDetector(
-                  onTap: () => Get.toNamed(Routes.NEWS_DETAIL, arguments: news),
-                  child: _newsCard(news),
-                ),
+    final eventController = Get.find<EventController>();
+    final List<NewsModel> newsList = eventController.allNews.take(2).toList();
+
+    if (newsList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            "Belum ada berita terbaru",
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: newsList
+          .map(
+            (news) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () => Get.toNamed(Routes.NEWS_DETAIL, arguments: news),
+                child: _newsCard(news),
               ),
-            )
-            .toList(),
-      ),
+            ),
+          )
+          .toList(),
     );
   }
 
