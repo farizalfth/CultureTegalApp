@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
-import '../../../data/service/user_service.dart';
+import '../../../data/models/event_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../widgets/main_header.dart';
+import '../../../utils/shimmer_placeholder.dart';
 import '../../event/controllers/event_controller.dart';
 import '../../main/controllers/controller.dart';
 import '../controllers/home_controller.dart';
-import '../../../data/models/event_model.dart';
 import '../../../data/models/news_model.dart';
+import '../../../data/models/umkm_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -33,37 +35,89 @@ class HomeView extends GetView<HomeController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const MainHeader(
-                title: "Tegal Culture",
-                subtitle: "",
-                hintText: "Cari budaya Tegal...",
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildMenuGrid(),
-                    _buildSectionHeader("Event Budaya", () {
-                      mainController.changePage(3);
-                    }),
-                    _buildRunningEvents(screenWidth, screenHeight),
-                    _buildSectionHeader("Marketplace UMKM", () {
-                      mainController.changePage(2);
-                    }),
-                    _buildHorizontalProducts(screenWidth, screenHeight),
-                    _buildSectionHeader(
-                      "Berita Tegal",
-                      () => Get.toNamed(Routes.NEWS_LIST),
-                    ),
-                    _buildNewsList(screenWidth),
-                  ],
-                ),
-              ),
+              _buildHeaderSection(),
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return _buildBodyShimmer(context, screenWidth, screenHeight);
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildMenuGrid(),
+                      _buildSectionHeader("Event Budaya", () {
+                        mainController.changePage(3);
+                      }),
+                      _buildRunningEvents(screenWidth, screenHeight),
+                      _buildSectionHeader("Marketplace UMKM", () {
+                        mainController.changePage(2);
+                      }),
+                      _buildHorizontalProducts(screenWidth, screenHeight),
+                      _buildSectionHeader(
+                        "Berita Tegal",
+                        () => Get.toNamed(Routes.NEWS_LIST),
+                      ),
+                      _buildNewsList(screenWidth),
+                    ],
+                  ),
+                );
+              }),
               SizedBox(height: context.mediaQueryPadding.bottom + 110),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBodyShimmer(BuildContext context, double width, double height) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.count(
+            padding: const EdgeInsets.only(top: 25, bottom: 10),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 1.45,
+            children: List.generate(4, (index) {
+              return const ShimmerPlaceholder(
+                width: double.infinity,
+                height: double.infinity,
+                borderRadius: 24,
+              );
+            }),
+          ),
+          const SizedBox(height: 15),
+          ShimmerPlaceholder(width: width * 0.35, height: 20, borderRadius: 6),
+          const SizedBox(height: 15),
+          _buildHorizontalEventShimmer(width, height),
+          const SizedBox(height: 15),
+          ShimmerPlaceholder(width: width * 0.45, height: 20, borderRadius: 6),
+          const SizedBox(height: 15),
+          _buildHorizontalProductShimmer(width, height),
+          const SizedBox(height: 15),
+          ShimmerPlaceholder(width: width * 0.3, height: 20, borderRadius: 6),
+          const SizedBox(height: 15),
+          _buildNewsListShimmer(width),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      color: Colors.white,
+      child: const MainHeader(
+        title: "Tegal Culture",
+        subtitle: "",
+        hintText: "Cari budaya Tegal...",
       ),
     );
   }
@@ -93,10 +147,10 @@ class HomeView extends GetView<HomeController> {
           onTap: () => mainController.changePage(1),
         ),
         _menuCard(
-          "Toko Budaya",
-          Icons.local_mall_rounded,
+          "Peta Budaya",
+          Icons.map_rounded,
           AppColors.cardRed,
-          onTap: () => mainController.changePage(2),
+          onTap: () {},
         ),
         _menuCard(
           "Kuis Budaya",
@@ -198,19 +252,43 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildRunningEvents(double width, double height) {
+  Widget _buildHorizontalEventShimmer(double width, double height) {
     return SizedBox(
       height: height * 0.26,
-      child: Obx(
-        () => ListView.builder(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          itemCount: controller.events.length,
-          itemBuilder: (context, index) {
-            final event = controller.events[index];
-            return _eventCard(event, width);
-          },
-        ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 2,
+        itemBuilder: (context, index) {
+          return Container(
+            width: width * 0.78,
+            margin: const EdgeInsets.only(right: 16, bottom: 15),
+            child: ShimmerPlaceholder(
+              width: width * 0.78,
+              height: height * 0.26,
+              borderRadius: 28,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRunningEvents(double width, double height) {
+    if (controller.events.isEmpty) {
+      return _buildEmptySection("Belum ada event saat ini.");
+    }
+
+    return SizedBox(
+      height: height * 0.26,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: controller.events.length,
+        itemBuilder: (context, index) {
+          final event = controller.events[index];
+          return _eventCard(event, width);
+        },
       ),
     );
   }
@@ -240,7 +318,18 @@ class HomeView extends GetView<HomeController> {
               children: [
                 Positioned.fill(
                   child: event.imageUrl != null
-                      ? Image.network(event.imageUrl!, fit: BoxFit.cover)
+                      ? CachedNetworkImage(
+                          imageUrl: event.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              const ShimmerPlaceholder(
+                                width: double.infinity,
+                                height: double.infinity,
+                                borderRadius: 0,
+                              ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                        )
                       : Image.asset(
                           'assets/images/beranda/cover_atas.png',
                           fit: BoxFit.cover,
@@ -384,46 +473,48 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildHorizontalProducts(double width, double height) {
+  Widget _buildHorizontalProductShimmer(double width, double height) {
     return SizedBox(
       height: height * 0.34,
-      child: ListView(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        children: [
-          _productCard(
-            "Batik Tegalan",
-            "Rp250.000",
-            "Toko Batik Berkah",
-            "https://www.wartabahari.com/wp-content/uploads/2017/10/baatik-tegal.jpg",
-            width,
-          ),
-          _productCard(
-            "Teh Poci Tanah",
-            "Rp45.000",
-            "Pusat Oleh-Oleh Tegal",
-            "https://upload.wikimedia.org/wikipedia/commons/c/c3/Teh_Poci_Gula_Batu.jpg",
-            width,
-          ),
-          _productCard(
-            "Krupuk Antor",
-            "Rp15.000",
-            "Warung Ibu Siti",
-            "https://rricoid-assets.obs.ap-southeast-4.myhuaweicloud.com/berita/Semarang/o/1722830394570-WhatsApp_Image_2024-08-05_at_10.24.02_(1)/1axbz9w27i10r66.jpeg",
-            width,
-          ),
-        ],
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 2,
+        itemBuilder: (context, index) {
+          return Container(
+            width: width * 0.55,
+            margin: const EdgeInsets.only(right: 16, bottom: 15),
+            child: ShimmerPlaceholder(
+              width: width * 0.55,
+              height: height * 0.34,
+              borderRadius: 24,
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _productCard(
-    String name,
-    String price,
-    String storeName,
-    String imgUrl,
-    double width,
-  ) {
+  Widget _buildHorizontalProducts(double width, double height) {
+    if (controller.products.isEmpty) {
+      return _buildEmptySection("Belum ada produk saat ini.");
+    }
+
+    return SizedBox(
+      height: height * 0.34,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: controller.products.length,
+        itemBuilder: (context, index) {
+          final product = controller.products[index];
+          return _productCard(product, width);
+        },
+      ),
+    );
+  }
+
+  Widget _productCard(UmkmModel product, double width) {
     return Container(
       width: width * 0.55,
       margin: const EdgeInsets.only(right: 16, bottom: 15),
@@ -441,21 +532,35 @@ class HomeView extends GetView<HomeController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: () => Get.toNamed(Routes.UMKM_DETAIL, arguments: product),
           borderRadius: BorderRadius.circular(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 flex: 5,
-                child: Container(
-                  decoration: BoxDecoration(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
-                    image: DecorationImage(
-                      image: NetworkImage(imgUrl),
+                    child: CachedNetworkImage(
+                      imageUrl: product.image,
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => const ShimmerPlaceholder(
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: 0,
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey.shade100,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -469,7 +574,7 @@ class HomeView extends GetView<HomeController> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        name,
+                        product.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -480,7 +585,7 @@ class HomeView extends GetView<HomeController> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        price,
+                        product.price,
                         style: const TextStyle(
                           color: AppColors.accent,
                           fontSize: 15,
@@ -511,7 +616,7 @@ class HomeView extends GetView<HomeController> {
                             const SizedBox(width: 6),
                             Flexible(
                               child: Text(
-                                storeName,
+                                product.storeName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -535,15 +640,69 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
+  Widget _buildNewsListShimmer(double width) {
+    return Column(
+      children: List.generate(2, (index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const ShimmerPlaceholder(
+                  width: 90,
+                  height: 90,
+                  borderRadius: 16,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ShimmerPlaceholder(
+                        width: 60,
+                        height: 20,
+                        borderRadius: 8,
+                      ),
+                      const SizedBox(height: 10),
+                      ShimmerPlaceholder(
+                        width: width * 0.5,
+                        height: 16,
+                        borderRadius: 4,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ShimmerPlaceholder(
+                            width: width * 0.25,
+                            height: 12,
+                            borderRadius: 4,
+                          ),
+                          const ShimmerPlaceholder(
+                            width: 14,
+                            height: 14,
+                            borderRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
   Widget _buildNewsList(double width) {
-    if (!Get.isRegistered<EventController>()) {
-      return const SizedBox.shrink();
-    }
-
-    final eventController = Get.find<EventController>();
-    final List<NewsModel> newsList = eventController.allNews.take(2).toList();
-
-    if (newsList.isEmpty) {
+    if (controller.newsList.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: Center(
@@ -556,7 +715,7 @@ class HomeView extends GetView<HomeController> {
     }
 
     return Column(
-      children: newsList
+      children: controller.newsList
           .map(
             (news) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -592,15 +751,20 @@ class HomeView extends GetView<HomeController> {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image: NetworkImage(news.image),
-                      fit: BoxFit.cover,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: CachedNetworkImage(
+                    imageUrl: news.image,
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const ShimmerPlaceholder(
+                      width: 90,
+                      height: 90,
+                      borderRadius: 16,
                     ),
+                    errorWidget: (context, url, error) =>
+                        const Icon(Icons.error),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -673,6 +837,18 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySection(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      alignment: Alignment.center,
+      child: Text(
+        message,
+        style: const TextStyle(color: Colors.grey, fontSize: 13),
       ),
     );
   }

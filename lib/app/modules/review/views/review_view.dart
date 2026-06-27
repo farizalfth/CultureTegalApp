@@ -38,7 +38,7 @@ class ReviewView extends GetView<ReviewController> {
             ),
             const SizedBox(height: 2),
             Text(
-              controller.culture.title,
+              controller.targetTitle,
               style: TextStyle(
                 color: Colors.grey.shade500,
                 fontSize: 11,
@@ -130,7 +130,7 @@ class ReviewView extends GetView<ReviewController> {
             ),
             const SizedBox(height: 8),
             Text(
-              "${controller.culture.reviews.length} Ulasan",
+              "${controller.reviewsList.length} Ulasan",
               style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
             ),
           ],

@@ -4,10 +4,9 @@ import 'package:get/get.dart';
 import '../../../data/models/culture_model.dart';
 import '../../../data/providers/culture_provider.dart';
 import '../../../data/service/auth_service.dart';
-import '../../../data/service/user_service.dart';
 
 class ExploreController extends GetxController {
-  final CultureProvider _cultureProvider = Get.put(CultureProvider());
+  final CultureProvider _cultureProvider = Get.find<CultureProvider>();
   final PageController pageController = PageController();
 
   var currentSliderIndex = 0.obs;

@@ -7,8 +7,8 @@ import '../../../data/providers/event_provider.dart';
 import '../../../data/providers/news_provider.dart';
 
 class EventController extends GetxController {
-  final EventProvider _eventProvider = Get.put(EventProvider());
-  final NewsProvider _newsProvider = Get.put(NewsProvider());
+  final EventProvider _eventProvider = Get.find<EventProvider>();
+  final NewsProvider _newsProvider = Get.find<NewsProvider>();
   final PageController pageController = PageController();
 
   var currentSliderIndex = 0.obs;
@@ -36,16 +36,17 @@ class EventController extends GetxController {
       hasError.value = false;
       errorMessage.value = "";
 
-      final Map<String, dynamic> eventData =
-          await _eventProvider.getEvents() as dynamic;
+      final Map<String, dynamic> eventData = await _eventProvider.getEvents();
       final List<dynamic> rawEventItems = eventData['items'] ?? [];
       final List<EventModel> fetchedEvents = rawEventItems
           .map((item) => EventModel.fromJson(item as Map<String, dynamic>))
           .toList();
 
-      final Map<String, dynamic> data =
-          await _newsProvider.getNews(category: "Semua", page: 1, perPage: 4)
-              as dynamic;
+      final Map<String, dynamic> data = await _newsProvider.getNews(
+        category: "Semua",
+        page: 1,
+        perPage: 4,
+      );
       final List<dynamic> rawNewsItems = data['items'] ?? [];
       final List<NewsModel> fetchedNewsList = rawNewsItems
           .map((item) => NewsModel.fromJson(item as Map<String, dynamic>))

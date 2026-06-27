@@ -13,6 +13,7 @@ class NewsListView extends GetView<NewsListController> {
   @override
   Widget build(BuildContext context) {
     final categories = ["Semua", "Budaya", "UMKM", "Edukasi"];
+    final double screenWidth = context.width;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -112,14 +113,12 @@ class NewsListView extends GetView<NewsListController> {
           ),
           Expanded(
             child: Obx(() {
-              final newsData = controller.filteredNews;
-
-              if (controller.isLoading.value && newsData.isEmpty) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                );
+              if (controller.isLoading.value &&
+                  controller.filteredNews.isEmpty) {
+                return _buildShimmerList(screenWidth);
               }
 
+              final newsData = controller.filteredNews;
               if (newsData.isEmpty) {
                 return Center(
                   child: Column(
@@ -178,6 +177,59 @@ class NewsListView extends GetView<NewsListController> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildShimmerList(double width) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(10),
+      itemCount: 4,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const ShimmerPlaceholder(
+                  width: 85,
+                  height: 85,
+                  borderRadius: 15,
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ShimmerPlaceholder(
+                        width: 60,
+                        height: 15,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: width * 0.45,
+                        height: 18,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: width * 0.25,
+                        height: 12,
+                        borderRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

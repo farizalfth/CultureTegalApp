@@ -1,47 +1,58 @@
+import 'dart:async';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import '../../../data/models/umkm_model.dart';
+import '../../../data/providers/umkm_provider.dart';
+import '../../../data/service/auth_service.dart';
 
 class UmkmController extends GetxController {
-  var selectedCategoryIndex = 0.obs;
+  final UmkmProvider _umkmProvider = Get.find<UmkmProvider>();
 
-  final RxList<UmkmModel> allProducts = <UmkmModel>[
-    UmkmModel(
-      id: "p1",
-      name: "Batik Tegalan Klasik",
-      price: "Rp250.000",
-      storeName: "Batik Berkah",
-      image: "https://www.wartabahari.com/wp-content/uploads/2017/10/baatik-tegal.jpg",
-      category: "Fashion",
-      rating: 4.8,
-    ),
-    UmkmModel(
-      id: "p2",
-      name: "Teh Poci Tanah Liat",
-      price: "Rp45.000",
-      storeName: "Teh Asli Tegal",
-      image: "https://upload.wikimedia.org/wikipedia/commons/c/c3/Teh_Poci_Gula_Batu.jpg",
-      category: "Kriya",
-      rating: 4.9,
-    ),
-    UmkmModel(
-      id: "p3",
-      name: "Kerupuk Antor Bumbu",
-      price: "Rp15.000",
-      storeName: "Camilan Ibu Siti",
-      image: "https://rricoid-assets.obs.ap-southeast-4.myhuaweicloud.com/berita/Semarang/o/1722830394570-WhatsApp_Image_2024-08-05_at_10.24.02_(1)/1axbz9w27i10r66.jpeg",
-      category: "Kuliner",
-      rating: 4.7,
-    ),
-    UmkmModel(
-      id: "p4",
-      name: "Kaos Galgil Tegal",
-      price: "Rp85.000",
-      storeName: "Galgil Store",
-      image: "https://infotegal.com/wp-content/uploads/2014/10/kaos-galgil-tegal.jpg",
-      category: "Fashion",
-      rating: 4.6,
-    ),
-  ].obs;
+  var selectedCategoryIndex = 0.obs;
+  var isLoading = false.obs;
+
+  final RxList<UmkmModel> allProducts = <UmkmModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _waitForAuth();
+    fetchProducts();
+  }
+
+  Future<void> _waitForAuth() async {
+    final authService = Get.find<AuthService>();
+    for (int i = 0; i < 15; i++) {
+      if (authService.currentToken != null) {
+        break;
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  Future<void> fetchProducts() async {
+    isLoading.value = true;
+    try {
+      final response = await _umkmProvider.getUmkms(page: 1, perPage: 20);
+      final List<dynamic> items = response['data']?['items'] ?? [];
+
+      final products = items.map((item) => UmkmModel.fromJson(item)).toList();
+      allProducts.assignAll(products);
+    } catch (e) {
+      Get.snackbar(
+        'Gagal Memuat Produk',
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   List<UmkmModel> get filteredProducts {
     if (selectedCategoryIndex.value == 0) return allProducts;

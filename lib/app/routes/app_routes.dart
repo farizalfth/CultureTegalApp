@@ -19,6 +19,8 @@ abstract class Routes {
   static const REVIEW = _Paths.REVIEW;
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
   static const UPDATE_PASSWORD = _Paths.UPDATE_PASSWORD;
+  static const VERIFY_OTP = _Paths.VERIFY_OTP;
+  static const UMKM_DETAIL = _Paths.UMKM_DETAIL;
 }
 
 abstract class _Paths {
@@ -40,4 +42,6 @@ abstract class _Paths {
   static const REVIEW = '/review';
   static const FORGOT_PASSWORD = '/forgot-password';
   static const UPDATE_PASSWORD = '/update-password';
+  static const VERIFY_OTP = '/verify-otp';
+  static const UMKM_DETAIL = '/umkm-detail';
 }
