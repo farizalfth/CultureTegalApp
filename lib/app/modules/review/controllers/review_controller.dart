@@ -5,16 +5,22 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../data/models/models.dart';
 import '../../../data/providers/culture_provider.dart';
+import '../../../data/providers/umkm_provider.dart';
 import '../../../data/service/auth_service.dart';
 import '../../detail_budaya/controllers/detail_budaya_controller.dart';
 import '../../explore/controllers/explore_controller.dart';
+import '../../umkm_detail/controllers/umkm_detail_controller.dart';
 
 class ReviewController extends GetxController {
   final CultureProvider _cultureProvider = Get.find<CultureProvider>();
+  final UmkmProvider _umkmProvider = Get.find<UmkmProvider>();
   final ScrollController scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
 
-  late CultureModel culture;
+  late final String targetId;
+  late final String targetTitle;
+  late final String targetType;
+
   final rating = 0.obs;
   final TextEditingController commentController = TextEditingController();
 
@@ -30,7 +36,16 @@ class ReviewController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    culture = Get.arguments as CultureModel;
+    final args = Get.arguments;
+    if (args is Map<String, dynamic>) {
+      targetType = args['type'] ?? 'culture';
+      targetId = args['id'] ?? '';
+      targetTitle = args['title'] ?? '';
+    } else if (args is CultureModel) {
+      targetType = 'culture';
+      targetId = args.id;
+      targetTitle = args.title;
+    }
     scrollController.addListener(_scrollListener);
     fetchInitialReviews();
   }
@@ -47,14 +62,22 @@ class ReviewController extends GetxController {
   Future<void> fetchInitialReviews() async {
     try {
       isLoading.value = true;
+      update();
       currentPage = 1;
       hasNextPage.value = true;
 
-      final data = await _cultureProvider.getPaginatedReviews(
-        culture.id,
-        page: currentPage,
-        perPage: 10,
-      );
+      final data = targetType == 'culture'
+          ? await _cultureProvider.getPaginatedReviews(
+              targetId,
+              page: currentPage,
+              perPage: 10,
+            )
+          : await _umkmProvider.getUmkmReviews(
+              targetId,
+              page: currentPage,
+              perPage: 10,
+            );
+
       final List<dynamic> rawItems = data['items'] ?? [];
       final List<ReviewModel> items = rawItems
           .map((item) => ReviewModel.fromJson(item as Map<String, dynamic>))
@@ -66,19 +89,28 @@ class ReviewController extends GetxController {
       debugPrint("Gagal memuat ulasan awal: $e");
     } finally {
       isLoading.value = false;
+      update();
     }
   }
 
   Future<void> loadMoreReviews() async {
     try {
       isLoadMore.value = true;
+      update();
       currentPage++;
 
-      final data = await _cultureProvider.getPaginatedReviews(
-        culture.id,
-        page: currentPage,
-        perPage: 10,
-      );
+      final data = targetType == 'culture'
+          ? await _cultureProvider.getPaginatedReviews(
+              targetId,
+              page: currentPage,
+              perPage: 10,
+            )
+          : await _umkmProvider.getUmkmReviews(
+              targetId,
+              page: currentPage,
+              perPage: 10,
+            );
+
       final List<dynamic> rawItems = data['items'] ?? [];
       final List<ReviewModel> items = rawItems
           .map((item) => ReviewModel.fromJson(item as Map<String, dynamic>))
@@ -91,6 +123,7 @@ class ReviewController extends GetxController {
       debugPrint("Gagal memuat halaman ulasan berikutnya: $e");
     } finally {
       isLoadMore.value = false;
+      update();
     }
   }
 
@@ -215,20 +248,38 @@ class ReviewController extends GetxController {
         }
       }
 
-      if (hasOwnReview) {
-        success = await _cultureProvider.putReview(
-          culture.id,
-          rating.value.toDouble(),
-          commentController.text.trim(),
-          reviewImagesBase64: imagesBase64,
-        );
+      if (targetType == 'culture') {
+        if (hasOwnReview) {
+          success = await _cultureProvider.putReview(
+            targetId,
+            rating.value.toDouble(),
+            commentController.text.trim(),
+            reviewImagesBase64: imagesBase64,
+          );
+        } else {
+          success = await _cultureProvider.postReview(
+            targetId,
+            rating.value.toDouble(),
+            commentController.text.trim(),
+            reviewImagesBase64: imagesBase64,
+          );
+        }
       } else {
-        success = await _cultureProvider.postReview(
-          culture.id,
-          rating.value.toDouble(),
-          commentController.text.trim(),
-          reviewImagesBase64: imagesBase64,
-        );
+        if (hasOwnReview) {
+          success = await _umkmProvider.putReview(
+            targetId,
+            rating.value.toDouble(),
+            commentController.text.trim(),
+            reviewImagesBase64: imagesBase64,
+          );
+        } else {
+          success = await _umkmProvider.postReview(
+            targetId,
+            rating.value.toDouble(),
+            commentController.text.trim(),
+            reviewImagesBase64: imagesBase64,
+          );
+        }
       }
 
       if (success) {
@@ -260,7 +311,9 @@ class ReviewController extends GetxController {
   Future<void> deleteOwnReview() async {
     try {
       isSubmitting.value = true;
-      final bool success = await _cultureProvider.deleteReview(culture.id);
+      final bool success = targetType == 'culture'
+          ? await _cultureProvider.deleteReview(targetId)
+          : await _umkmProvider.deleteReview(targetId);
 
       if (success) {
         Get.snackbar(
@@ -285,18 +338,20 @@ class ReviewController extends GetxController {
   }
 
   Future<void> _syncData() async {
-    if (Get.isRegistered<ExploreController>()) {
-      await Get.find<ExploreController>().fetchCulturesData();
-      final updatedSite = Get.find<ExploreController>().allData.firstWhere(
-        (p) => p.id == culture.id,
-      );
-
-      culture = updatedSite;
-      update();
-
-      if (Get.isRegistered<DetailBudayaController>()) {
-        Get.find<DetailBudayaController>().culture = updatedSite;
-        Get.find<DetailBudayaController>().update();
+    if (targetType == 'culture') {
+      if (Get.isRegistered<ExploreController>()) {
+        await Get.find<ExploreController>().fetchCulturesData();
+        final updatedSite = Get.find<ExploreController>().allData.firstWhere(
+          (p) => p.id == targetId,
+        );
+        if (Get.isRegistered<DetailBudayaController>()) {
+          Get.find<DetailBudayaController>().culture = updatedSite;
+          Get.find<DetailBudayaController>().update();
+        }
+      }
+    } else {
+      if (Get.isRegistered<UmkmDetailController>()) {
+        await Get.find<UmkmDetailController>().fetchReviewsLimit();
       }
     }
   }
