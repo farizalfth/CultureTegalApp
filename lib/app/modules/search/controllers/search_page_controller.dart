@@ -3,16 +3,46 @@ import 'package:get/get.dart';
 import '../../../data/models/models.dart';
 import '../../../data/models/event_model.dart';
 import '../../../data/models/news_model.dart';
-import '../../explore/controllers/explore_controller.dart';
-import '../../event/controllers/event_controller.dart';
+import '../../../data/models/umkm_model.dart';
+import '../../../data/providers/culture_provider.dart';
+import '../../../data/providers/umkm_provider.dart';
+import '../../../data/providers/event_provider.dart';
+import '../../../data/providers/news_provider.dart';
+import '../../../data/service/auth_service.dart';
 
 class SearchPageController extends GetxController {
+  final CultureProvider _cultureProvider = Get.isRegistered<CultureProvider>()
+      ? Get.find<CultureProvider>()
+      : Get.put(CultureProvider());
+
+  final UmkmProvider _umkmProvider = Get.isRegistered<UmkmProvider>()
+      ? Get.find<UmkmProvider>()
+      : Get.put(UmkmProvider());
+
+  final EventProvider _eventProvider = Get.isRegistered<EventProvider>()
+      ? Get.find<EventProvider>()
+      : Get.put(EventProvider());
+
+  final NewsProvider _newsProvider = Get.isRegistered<NewsProvider>()
+      ? Get.find<NewsProvider>()
+      : Get.put(NewsProvider());
+
   final TextEditingController searchController = TextEditingController();
   var searchQuery = "".obs;
   var selectedTab = 0.obs;
 
   var filter1Value = "Semua".obs;
   var filter2Value = "Semua".obs;
+
+  var isLoadingCultures = false.obs;
+  var isLoadingUmkms = false.obs;
+  var isLoadingEvents = false.obs;
+  var isLoadingNews = false.obs;
+
+  final RxList<CultureModel> searchedCulturesList = <CultureModel>[].obs;
+  final RxList<UmkmModel> searchedUmkmsList = <UmkmModel>[].obs;
+  final RxList<EventModel> searchedEventsList = <EventModel>[].obs;
+  final RxList<NewsModel> searchedNewsList = <NewsModel>[].obs;
 
   final Map<int, Map<String, dynamic>> tabConfigs = {
     0: {
@@ -41,84 +71,139 @@ class SearchPageController extends GetxController {
     },
   };
 
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _waitForAuth();
+    debounce(
+      searchQuery,
+      (_) => fetchSearchResults(),
+      time: const Duration(milliseconds: 500),
+    );
+    fetchSearchResults();
+  }
+
+  Future<void> _waitForAuth() async {
+    final authService = Get.find<AuthService>();
+    int retry = 0;
+    while (authService.currentToken == null && retry < 30) {
+      await Future.delayed(const Duration(milliseconds: 150));
+      retry++;
+    }
+  }
+
   void updateQuery(String val) => searchQuery.value = val;
+
+  void changeCategoryTab(int index) {
+    selectedTab.value = index;
+    resetFilters();
+    fetchSearchResults();
+  }
+
+  void changeFilter1(String val) {
+    filter1Value.value = val;
+    fetchSearchResults();
+  }
+
+  void changeFilter2(String val) {
+    filter2Value.value = val;
+    fetchSearchResults();
+  }
 
   void resetFilters() {
     filter1Value.value = "Semua";
     filter2Value.value = selectedTab.value == 3 ? "Semua Waktu" : "Semua";
   }
 
-  List<CultureModel> get filteredCultures {
-    if (!Get.isRegistered<ExploreController>()) return [];
-    List<CultureModel> list = Get.find<ExploreController>().allData;
-
-    if (searchQuery.value.isNotEmpty) {
-      list = list
-          .where(
-            (c) =>
-                c.title.toLowerCase().contains(searchQuery.value.toLowerCase()),
-          )
-          .toList();
+  Future<void> fetchSearchResults() async {
+    final tab = selectedTab.value;
+    if (tab == 0) {
+      await fetchCultureSearchResults();
+    } else if (tab == 1) {
+      await fetchUmkmSearchResults();
+    } else if (tab == 2) {
+      await fetchEventSearchResults();
+    } else if (tab == 3) {
+      await fetchNewsSearchResults();
     }
-
-    if (filter1Value.value != "Semua") {
-      list = list.where((c) => c.category == filter1Value.value).toList();
-    }
-
-    return list;
   }
 
-  List<EventModel> get filteredEvents {
-    if (!Get.isRegistered<EventController>()) return [];
-    final ec = Get.find<EventController>();
-    List<EventModel> list = [...ec.allOngoingEvents, ...ec.allUpcomingEvents];
-
-    if (searchQuery.value.isNotEmpty) {
-      list = list
-          .where(
-            (e) =>
-                e.name.toLowerCase().contains(searchQuery.value.toLowerCase()),
-          )
-          .toList();
+  Future<void> fetchCultureSearchResults() async {
+    isLoadingCultures.value = true;
+    try {
+      final list = await _cultureProvider.getCultures(
+        category: filter1Value.value,
+        search: searchQuery.value,
+      );
+      searchedCulturesList.assignAll(list);
+    } catch (e) {
+      searchedCulturesList.clear();
+    } finally {
+      isLoadingCultures.value = false;
     }
-
-    if (filter1Value.value != "Semua") {
-      list = list.where((e) => e.category == filter1Value.value).toList();
-    }
-
-    if (filter2Value.value != "Semua") {
-      if (filter2Value.value == "Berjalan") {
-        list = list.where((e) => e.status == "Sedang Berjalan").toList();
-      } else if (filter2Value.value == "Mendatang") {
-        list = list
-            .where((e) => e.status == "Akan Datang" || e.status == "Rutin")
-            .toList();
-      } else if (filter2Value.value == "Selesai") {
-        list = list.where((e) => e.status == "Selesai").toList();
-      }
-    }
-
-    return list;
   }
 
-  List<NewsModel> get filteredNews {
-    if (!Get.isRegistered<EventController>()) return [];
-    List<NewsModel> list = Get.find<EventController>().allNews;
-
-    if (searchQuery.value.isNotEmpty) {
-      list = list
-          .where(
-            (n) =>
-                n.title.toLowerCase().contains(searchQuery.value.toLowerCase()),
-          )
-          .toList();
+  Future<void> fetchUmkmSearchResults() async {
+    isLoadingUmkms.value = true;
+    try {
+      final response = await _umkmProvider.getUmkms(
+        category: filter1Value.value,
+        search: searchQuery.value,
+        sort: filter2Value.value,
+        page: 1,
+        perPage: 20,
+      );
+      final List<dynamic> items = response['data']?['items'] ?? [];
+      final products = items.map((item) => UmkmModel.fromJson(item)).toList();
+      searchedUmkmsList.assignAll(products);
+    } catch (e) {
+      searchedUmkmsList.clear();
+    } finally {
+      isLoadingUmkms.value = false;
     }
+  }
 
-    if (filter1Value.value != "Semua") {
-      list = list.where((n) => n.category == filter1Value.value).toList();
+  Future<void> fetchEventSearchResults() async {
+    isLoadingEvents.value = true;
+    try {
+      final response = await _eventProvider.getEvents(
+        category: filter1Value.value,
+        status: filter2Value.value,
+        search: searchQuery.value,
+        page: 1,
+        perPage: 20,
+      );
+      final List<dynamic> items = response['items'] ?? [];
+      final list = items.map((item) => EventModel.fromJson(item)).toList();
+      searchedEventsList.assignAll(list);
+    } catch (e) {
+      searchedEventsList.clear();
+    } finally {
+      isLoadingEvents.value = false;
     }
+  }
 
-    return list;
+  Future<void> fetchNewsSearchResults() async {
+    isLoadingNews.value = true;
+    try {
+      final response = await _newsProvider.getNews(
+        category: filter1Value.value,
+        search: searchQuery.value,
+        page: 1,
+        perPage: 20,
+      );
+      final List<dynamic> items = response['items'] ?? [];
+      final list = items.map((item) => NewsModel.fromJson(item)).toList();
+      searchedNewsList.assignAll(list);
+    } catch (e) {
+      searchedNewsList.clear();
+    } finally {
+      isLoadingNews.value = false;
+    }
   }
 
   @override

@@ -7,6 +7,7 @@ import '../controllers/search_page_controller.dart';
 import '../../../data/models/models.dart';
 import '../../../data/models/event_model.dart';
 import '../../../data/models/news_model.dart';
+import '../../../data/models/umkm_model.dart';
 import '../../../utils/shimmer_placeholder.dart';
 
 class SearchPageView extends GetView<SearchPageController> {
@@ -70,8 +71,7 @@ class SearchPageView extends GetView<SearchPageController> {
           ),
           bottom: TabBar(
             onTap: (index) {
-              controller.selectedTab.value = index;
-              controller.resetFilters();
+              controller.changeCategoryTab(index);
             },
             labelColor: AppColors.primary,
             unselectedLabelColor: Colors.grey,
@@ -97,7 +97,7 @@ class SearchPageView extends GetView<SearchPageController> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildCulturesResultList(),
-                  const Center(child: Text("Hasil Pencarian UMKM")),
+                  _buildUmkmsResultList(),
                   _buildEventsResultList(),
                   _buildNewsResultList(),
                 ],
@@ -125,6 +125,7 @@ class SearchPageView extends GetView<SearchPageController> {
                 label: config['label1'],
                 value: controller.filter1Value,
                 items: config['items1'],
+                onChanged: (val) => controller.changeFilter1(val),
               ),
             ),
             const SizedBox(width: 15),
@@ -133,6 +134,7 @@ class SearchPageView extends GetView<SearchPageController> {
                 label: config['label2'],
                 value: controller.filter2Value,
                 items: config['items2'],
+                onChanged: (val) => controller.changeFilter2(val),
               ),
             ),
           ],
@@ -145,6 +147,7 @@ class SearchPageView extends GetView<SearchPageController> {
     required String label,
     required RxString value,
     required List<String> items,
+    required ValueChanged<String> onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,7 +166,7 @@ class SearchPageView extends GetView<SearchPageController> {
           final bool isActive =
               value.value != "Semua" && value.value != "Semua Waktu";
           return PopupMenuButton<String>(
-            onSelected: (val) => value.value = val,
+            onSelected: onChanged,
             offset: const Offset(0, 45),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
@@ -217,9 +220,73 @@ class SearchPageView extends GetView<SearchPageController> {
     );
   }
 
+  Widget _buildShimmerList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(10),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const ShimmerPlaceholder(
+                  width: 85,
+                  height: 85,
+                  borderRadius: 15,
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ShimmerPlaceholder(
+                        width: 60,
+                        height: 15,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: context.width * 0.5,
+                        height: 18,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: context.width * 0.3,
+                        height: 14,
+                        borderRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCulturesResultList() {
     return Obx(() {
-      final list = controller.filteredCultures;
+      if (controller.isLoadingCultures.value) {
+        return _buildShimmerList();
+      }
+
+      final list = controller.searchedCulturesList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
@@ -244,9 +311,44 @@ class SearchPageView extends GetView<SearchPageController> {
     });
   }
 
+  Widget _buildUmkmsResultList() {
+    return Obx(() {
+      if (controller.isLoadingUmkms.value) {
+        return _buildShimmerList();
+      }
+
+      final list = controller.searchedUmkmsList;
+      if (list.isEmpty) return _buildEmptyState();
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(10),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final item = list[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Get.toNamed(Routes.UMKM_DETAIL, arguments: item),
+              child: _customCard(
+                item.name,
+                item.category,
+                item.image,
+                "${item.storeName} • ${item.price}",
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
   Widget _buildEventsResultList() {
     return Obx(() {
-      final list = controller.filteredEvents;
+      if (controller.isLoadingEvents.value) {
+        return _buildShimmerList();
+      }
+
+      final list = controller.searchedEventsList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
@@ -273,7 +375,11 @@ class SearchPageView extends GetView<SearchPageController> {
 
   Widget _buildNewsResultList() {
     return Obx(() {
-      final list = controller.filteredNews;
+      if (controller.isLoadingNews.value) {
+        return _buildShimmerList();
+      }
+
+      final list = controller.searchedNewsList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
