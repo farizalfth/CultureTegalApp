@@ -37,12 +37,22 @@ class CultureProvider extends GetConnect {
     super.onInit();
   }
 
-  Future<List<CultureModel>> getCultures({String? category}) async {
+  Future<List<CultureModel>> getCultures({
+    String? category,
+    String? search,
+  }) async {
     try {
-      final String path = category != null && category != "Semua"
-          ? '/explore?kategori=$category'
-          : '/explore';
-
+      String path = '/explore';
+      List<String> queryParams = [];
+      if (category != null && category != "Semua") {
+        queryParams.add('kategori=${Uri.encodeComponent(category)}');
+      }
+      if (search != null && search.isNotEmpty) {
+        queryParams.add('search=${Uri.encodeComponent(search)}');
+      }
+      if (queryParams.isNotEmpty) {
+        path += '?${queryParams.join('&')}';
+      }
       final response = await get(path);
 
       if (response.status.hasError) {
