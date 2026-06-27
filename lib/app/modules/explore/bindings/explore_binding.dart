@@ -1,12 +1,11 @@
-import 'package:cultural_tegal/app/modules/explore/controllers/explore_controller.dart';
 import 'package:get/get.dart';
-
+import '../../../data/providers/culture_provider.dart';
+import '../controllers/explore_controller.dart';
 
 class ExploreBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ExploreController>(
-          () => ExploreController(),
-    );
+    Get.lazyPut<CultureProvider>(() => CultureProvider());
+    Get.lazyPut<ExploreController>(() => ExploreController());
   }
 }
