@@ -37,18 +37,21 @@ class EventProvider extends GetConnect {
   Future<Map<String, dynamic>> getEvents({
     String? category,
     String? status,
+    String? search,
     int page = 1,
     int perPage = 10,
   }) async {
     try {
       String path = '/events?page=$page&per_page=$perPage';
       if (category != null && category != "Semua") {
-        path += '&kategori=$category';
+        path += '&kategori=${Uri.encodeComponent(category)}';
       }
       if (status != null && status != "Semua") {
-        path += '&status=$status';
+        path += '&status=${Uri.encodeComponent(status)}';
       }
-
+      if (search != null && search.isNotEmpty) {
+        path += '&search=${Uri.encodeComponent(search)}';
+      }
       final response = await get(path);
 
       if (response.status.hasError) {
