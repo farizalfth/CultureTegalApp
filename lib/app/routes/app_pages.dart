@@ -30,8 +30,12 @@ import '../modules/search/bindings/search_page_binding.dart';
 import '../modules/search/views/search_page_view.dart';
 import '../modules/umkm/bindings/umkm_binding.dart';
 import '../modules/umkm/views/umkm_view.dart';
+import '../modules/umkm_detail/bindings/umkm_detail_binding.dart';
+import '../modules/umkm_detail/views/umkm_detail_view.dart';
 import '../modules/update_password/bindings/update_password_binding.dart';
 import '../modules/update_password/views/update_password_view.dart';
+import '../modules/verify_otp/bindings/verify_otp_binding.dart';
+import '../modules/verify_otp/views/verify_otp_view.dart';
 
 part 'app_routes.dart';
 
@@ -139,6 +143,16 @@ class AppPages {
       name: _Paths.UPDATE_PASSWORD,
       page: () => const UpdatePasswordView(),
       binding: UpdatePasswordBinding(),
+    ),
+    GetPage(
+      name: _Paths.VERIFY_OTP,
+      page: () => const VerifyOtpView(),
+      binding: VerifyOtpBinding(),
+    ),
+    GetPage(
+      name: _Paths.UMKM_DETAIL,
+      page: () => const UmkmDetailView(),
+      binding: UmkmDetailBinding(),
     ),
   ];
 }

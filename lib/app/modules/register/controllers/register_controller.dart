@@ -18,8 +18,10 @@ class RegisterController extends GetxController {
 
   void togglePasswordVisibility() =>
       isPasswordHidden.value = !isPasswordHidden.value;
+
   void toggleConfirmPasswordVisibility() =>
       isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
+
   void toggleAgree(bool? value) => isAgree.value = value ?? false;
 
   Future<void> register() async {
@@ -65,14 +67,20 @@ class RegisterController extends GetxController {
 
       Get.snackbar(
         'Pendaftaran Berhasil',
-        'Silakan cek kotak masuk atau folder spam email Anda untuk memverifikasi akun sebelum masuk.',
+        'Silakan cek kode OTP yang telah dikirimkan ke email Anda.',
         backgroundColor: Colors.green.shade600,
         colorText: Colors.white,
-        duration: const Duration(seconds: 6),
+        duration: const Duration(seconds: 4),
         snackPosition: SnackPosition.TOP,
       );
 
-      Get.offAllNamed('/login');
+      Get.toNamed(
+        '/verify-otp',
+        arguments: {
+          'email': emailController.text.trim(),
+          'name': nameController.text.trim(),
+        },
+      );
     } catch (e) {
       Get.snackbar(
         'Pendaftaran Gagal',

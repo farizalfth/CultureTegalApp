@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
+import '../../../routes/app_pages.dart';
 import '../../../widgets/main_header.dart';
+import '../../../utils/shimmer_placeholder.dart';
 import '../controllers/umkm_controller.dart';
 import '../../../data/models/umkm_model.dart';
 
@@ -20,22 +23,30 @@ class UmkmView extends GetView<UmkmController> {
             hintText: "Cari produk UMKM...",
           ),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 25),
-                  _buildCategoryTabs(),
-                  const SizedBox(height: 25),
-                  Obx(() {
-                    final products = controller.filteredProducts;
-                    if (products.isEmpty) {
-                      return _buildEmptyState();
-                    }
-                    return _buildProductGrid(products);
-                  }),
-                  const SizedBox(height: 110),
-                ],
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () => controller.fetchProducts(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 25),
+                    _buildCategoryTabs(),
+                    const SizedBox(height: 25),
+                    Obx(() {
+                      if (controller.isLoading.value) {
+                        return _buildShimmerGrid(context);
+                      }
+
+                      final products = controller.filteredProducts;
+                      if (products.isEmpty) {
+                        return _buildEmptyState();
+                      }
+                      return _buildProductGrid(products);
+                    }),
+                    const SizedBox(height: 110),
+                  ],
+                ),
               ),
             ),
           ),
@@ -110,128 +121,231 @@ class UmkmView extends GetView<UmkmController> {
     );
   }
 
-  Widget _productCard(UmkmModel product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+  Widget _buildShimmerGrid(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 20,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.7,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 5,
-            child: Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                    image: DecorationImage(
-                      image: NetworkImage(product.image),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          color: Colors.amber,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          product.rating.toString(),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          Expanded(
-            flex: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(
+                flex: 5,
+                child: ShimmerPlaceholder(
+                  width: double.infinity,
+                  height: double.infinity,
+                  borderRadius: 24,
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        product.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ShimmerPlaceholder(
+                            width: context.width * 0.3,
+                            height: 14,
+                            borderRadius: 6,
+                          ),
+                          const SizedBox(height: 8),
+                          ShimmerPlaceholder(
+                            width: context.width * 0.2,
+                            height: 16,
+                            borderRadius: 6,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        product.price,
-                        style: const TextStyle(
-                          color: AppColors.accent,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      Row(
+                        children: [
+                          const ShimmerPlaceholder(
+                            width: 14,
+                            height: 14,
+                            borderRadius: 4,
+                          ),
+                          const SizedBox(width: 6),
+                          ShimmerPlaceholder(
+                            width: context.width * 0.15,
+                            height: 11,
+                            borderRadius: 4,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.storefront_rounded,
-                        size: 14,
-                        color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _productCard(UmkmModel product) {
+    return GestureDetector(
+      onTap: () => Get.toNamed(Routes.UMKM_DETAIL, arguments: product),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 5,
+              child: Stack(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          product.storeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
+                      child: CachedNetworkImage(
+                        imageUrl: product.image,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const ShimmerPlaceholder(
+                          width: double.infinity,
+                          height: double.infinity,
+                          borderRadius: 0,
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey.shade100,
+                          child: const Icon(
+                            Icons.image_not_supported_outlined,
                             color: Colors.grey,
                           ),
                         ),
                       ),
-                    ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            product.rating.toString(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          product.price,
+                          style: const TextStyle(
+                            color: AppColors.accent,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.storefront_rounded,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            product.storeName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

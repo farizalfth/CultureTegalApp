@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import '../../../data/providers/umkm_provider.dart';
-import '../controllers/umkm_controller.dart';
+import '../controllers/umkm_detail_controller.dart';
 
-class UmkmBinding extends Bindings {
+class UmkmDetailBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<UmkmProvider>(() => UmkmProvider());
-    Get.lazyPut<UmkmController>(() => UmkmController());
+    Get.lazyPut<UmkmDetailController>(() => UmkmDetailController());
   }
 }

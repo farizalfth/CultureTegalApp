@@ -12,6 +12,8 @@ class EventListView extends GetView<EventListController> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = context.width;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -94,6 +96,11 @@ class EventListView extends GetView<EventListController> {
           ),
           Expanded(
             child: Obx(() {
+              if (controller.isLoading.value &&
+                  controller.filteredEvents.isEmpty) {
+                return _buildShimmerList(screenWidth);
+              }
+
               final events = controller.filteredEvents;
               if (events.isEmpty) {
                 return Center(
@@ -223,6 +230,59 @@ class EventListView extends GetView<EventListController> {
           }),
         ],
       ),
+    );
+  }
+
+  Widget _buildShimmerList(double width) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(10),
+      itemCount: 4,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+                const ShimmerPlaceholder(
+                  width: 100,
+                  height: 100,
+                  borderRadius: 18,
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ShimmerPlaceholder(
+                        width: 60,
+                        height: 15,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: width * 0.4,
+                        height: 18,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: width * 0.3,
+                        height: 14,
+                        borderRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
@@ -15,8 +16,12 @@ class AuthService extends GetxService {
   Future<AuthService> init() async {
     apiUrl = dotenv.env['FLASK_API_URL']!;
     final String webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID']!;
+    final String? iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'];
 
-    await GoogleSignIn.instance.initialize(serverClientId: webClientId);
+    await GoogleSignIn.instance.initialize(
+      serverClientId: webClientId,
+      clientId: Platform.isIOS ? iosClientId : null,
+    );
 
     supabase.auth.onAuthStateChange.listen((data) async {
       final AuthChangeEvent event = data.event;
@@ -73,7 +78,6 @@ class AuthService extends GetxService {
         email: email,
         password: password,
         data: {'full_name': name},
-        emailRedirectTo: 'culturaltegal://login-callback',
       );
 
       if (res.session != null) {
@@ -88,6 +92,34 @@ class AuthService extends GetxService {
       } else if (e.message.contains('Password should be')) {
         throw 'Kata sandi minimal harus 6 karakter.';
       }
+      throw e.message;
+    } catch (e) {
+      throw 'Terjadi kesalahan sistem: $e';
+    }
+  }
+
+  Future<void> verifyRegisterOtp(String email, String token) async {
+    try {
+      final AuthResponse res = await supabase.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.signup,
+      );
+
+      if (res.session == null) {
+        throw 'Gagal mendapatkan sesi aktif setelah verifikasi.';
+      }
+    } on AuthException catch (e) {
+      throw e.message;
+    } catch (e) {
+      throw 'Terjadi kesalahan sistem: $e';
+    }
+  }
+
+  Future<void> resendRegisterOtp(String email) async {
+    try {
+      await supabase.auth.resend(type: OtpType.signup, email: email);
+    } on AuthException catch (e) {
       throw e.message;
     } catch (e) {
       throw 'Terjadi kesalahan sistem: $e';
