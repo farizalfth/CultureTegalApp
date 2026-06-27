@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
-import '../../../data/models/event_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../widgets/main_header.dart';
 import '../../../utils/shimmer_placeholder.dart';
-import '../../event/controllers/event_controller.dart';
 import '../../main/controllers/controller.dart';
 import '../controllers/home_controller.dart';
 import '../../../data/models/news_model.dart';
-import '../../../data/models/umkm_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -27,87 +24,95 @@ class HomeView extends GetView<HomeController> {
         onRefresh: () => controller.loadAllData(),
         color: AppColors.primary,
         backgroundColor: Colors.white,
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           controller: mainController.homeScrollController,
           physics: const AlwaysScrollableScrollPhysics(
             parent: ClampingScrollPhysics(),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderSection(),
-              Obx(() {
-                if (controller.isLoading.value) {
-                  return _buildBodyShimmer(context, screenWidth, screenHeight);
-                }
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeaderSection()),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyMenuDelegate(
+                child: Container(
+                  color: AppColors.background,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 20,
+                  ),
+                  child: _buildQuickActionMenu(),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverToBoxAdapter(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return _buildBodyShimmer(
+                      context,
+                      screenWidth,
+                      screenHeight,
+                    );
+                  }
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Column(
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildMenuGrid(),
-                      _buildSectionHeader("Event Budaya", () {
-                        mainController.changePage(3);
-                      }),
-                      _buildRunningEvents(screenWidth, screenHeight),
-                      _buildSectionHeader("Marketplace UMKM", () {
-                        mainController.changePage(2);
-                      }),
-                      _buildHorizontalProducts(screenWidth, screenHeight),
+                      const SizedBox(height: 15),
+                      _buildBannerSlider(),
+                      const SizedBox(height: 35),
+                      _buildMainFeaturesGrid(),
+                      const SizedBox(height: 30),
                       _buildSectionHeader(
                         "Berita Tegal",
                         () => Get.toNamed(Routes.NEWS_LIST),
                       ),
+                      const SizedBox(height: 15),
                       _buildNewsList(screenWidth),
                     ],
-                  ),
-                );
-              }),
-              SizedBox(height: context.mediaQueryPadding.bottom + 110),
-            ],
-          ),
+                  );
+                }),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildBodyShimmer(BuildContext context, double width, double height) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GridView.count(
-            padding: const EdgeInsets.only(top: 25, bottom: 10),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.45,
-            children: List.generate(4, (index) {
-              return const ShimmerPlaceholder(
-                width: double.infinity,
-                height: double.infinity,
-                borderRadius: 24,
-              );
-            }),
-          ),
-          const SizedBox(height: 15),
-          ShimmerPlaceholder(width: width * 0.35, height: 20, borderRadius: 6),
-          const SizedBox(height: 15),
-          _buildHorizontalEventShimmer(width, height),
-          const SizedBox(height: 15),
-          ShimmerPlaceholder(width: width * 0.45, height: 20, borderRadius: 6),
-          const SizedBox(height: 15),
-          _buildHorizontalProductShimmer(width, height),
-          const SizedBox(height: 15),
-          ShimmerPlaceholder(width: width * 0.3, height: 20, borderRadius: 6),
-          const SizedBox(height: 15),
-          _buildNewsListShimmer(width),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 15),
+        const ShimmerPlaceholder(
+          width: double.infinity,
+          height: 150,
+          borderRadius: 24,
+        ),
+        const SizedBox(height: 35),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.45,
+          children: List.generate(4, (index) {
+            return const ShimmerPlaceholder(
+              width: double.infinity,
+              height: double.infinity,
+              borderRadius: 24,
+            );
+          }),
+        ),
+        const SizedBox(height: 30),
+        const ShimmerPlaceholder(width: 120, height: 20, borderRadius: 6),
+        const SizedBox(height: 15),
+        _buildNewsListShimmer(width),
+      ],
     );
   }
 
@@ -122,11 +127,126 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildMenuGrid() {
+  Widget _buildQuickActionMenu() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _quickActionItem("Smart\nCulture", Icons.auto_awesome_rounded, () {}),
+        _quickActionItem(
+          "Jelajah\nBudaya",
+          Icons.explore_rounded,
+          () => Get.find<MainController>().changePage(1),
+        ),
+        _quickActionItem("Peta\nBudaya", Icons.map_rounded, () {}),
+        _quickActionItem(
+          "Kuis\nBudaya",
+          Icons.quiz_rounded,
+          () => Get.toNamed('/kuis-budaya'),
+        ),
+      ],
+    );
+  }
+
+  Widget _quickActionItem(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade100),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBannerSlider() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDF2E9),
+        borderRadius: BorderRadius.circular(24),
+        image: const DecorationImage(
+          image: AssetImage('assets/images/jelajah/cover_info_badge.png'),
+          fit: BoxFit.fitHeight,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Ayo Jelajah & Kumpulkan Lencana!",
+              style: TextStyle(
+                color: Color(0xFF7B3F00),
+                fontWeight: FontWeight.w900,
+                fontSize: 17,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              "Jelajahi lebih banyak tempat budaya\ndan dapatkan lencanamu.",
+              style: TextStyle(
+                color: Color(0xFF7B3F00),
+                fontSize: 11,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 18),
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                "Lihat Lencana",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainFeaturesGrid() {
     final mainController = Get.find<MainController>();
 
     return GridView.count(
-      padding: const EdgeInsets.only(top: 25, bottom: 10),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
@@ -134,49 +254,49 @@ class HomeView extends GetView<HomeController> {
       crossAxisSpacing: 16,
       childAspectRatio: 1.45,
       children: [
-        _menuCard(
-          "Smart Culture",
-          Icons.auto_awesome_rounded,
+        _featureCard(
+          "Kebudayaan",
+          Icons.account_balance_rounded,
           AppColors.cardBlue,
-          onTap: () {},
+          () => mainController.changePage(1),
         ),
-        _menuCard(
-          "Jelajah Budaya",
-          Icons.explore_rounded,
+        _featureCard(
+          "Pariwisata",
+          Icons.terrain_rounded,
           AppColors.cardOrange,
-          onTap: () => mainController.changePage(1),
+          () => mainController.changePage(1),
         ),
-        _menuCard(
-          "Peta Budaya",
-          Icons.map_rounded,
+        _featureCard(
+          "Kuliner Tegal",
+          Icons.restaurant_rounded,
           AppColors.cardRed,
-          onTap: () {},
+          () => mainController.changePage(1),
         ),
-        _menuCard(
-          "Kuis Budaya",
-          Icons.quiz_rounded,
+        _featureCard(
+          "Seni & Event",
+          Icons.theater_comedy_rounded,
           AppColors.cardBrown,
-          onTap: () => Get.toNamed('/kuis-budaya'),
+          () => mainController.changePage(3),
         ),
       ],
     );
   }
 
-  Widget _menuCard(
+  Widget _featureCard(
     String title,
     IconData icon,
-    Color color, {
-    required VoidCallback onTap,
-  }) {
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: color.withOpacity(0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -206,7 +326,7 @@ class HomeView extends GetView<HomeController> {
                   child: Icon(
                     icon,
                     color: Colors.white.withOpacity(0.3),
-                    size: 46,
+                    size: 40,
                   ),
                 ),
               ],
@@ -218,425 +338,34 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildSectionHeader(String title, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Colors.black87,
-              letterSpacing: 0.2,
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: Colors.black87,
+            letterSpacing: 0.2,
           ),
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                "Lihat Semua",
-                style: TextStyle(
-                  color: AppColors.accent,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+        ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Text(
+              "Lihat Semua",
+              style: TextStyle(
+                color: AppColors.accent,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHorizontalEventShimmer(double width, double height) {
-    return SizedBox(
-      height: height * 0.26,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: 2,
-        itemBuilder: (context, index) {
-          return Container(
-            width: width * 0.78,
-            margin: const EdgeInsets.only(right: 16, bottom: 15),
-            child: ShimmerPlaceholder(
-              width: width * 0.78,
-              height: height * 0.26,
-              borderRadius: 28,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildRunningEvents(double width, double height) {
-    if (controller.events.isEmpty) {
-      return _buildEmptySection("Belum ada event saat ini.");
-    }
-
-    return SizedBox(
-      height: height * 0.26,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: controller.events.length,
-        itemBuilder: (context, index) {
-          final event = controller.events[index];
-          return _eventCard(event, width);
-        },
-      ),
-    );
-  }
-
-  Widget _eventCard(EventModel event, double width) {
-    return Container(
-      width: width * 0.78,
-      margin: const EdgeInsets.only(right: 16, bottom: 15),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Get.toNamed(Routes.DETAIL_EVENT, arguments: event),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: event.imageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: event.imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              const ShimmerPlaceholder(
-                                width: double.infinity,
-                                height: double.infinity,
-                                borderRadius: 0,
-                              ),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                        )
-                      : Image.asset(
-                          'assets/images/beranda/cover_atas.png',
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.85),
-                          Colors.black.withOpacity(0.1),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.25),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  event.badgeTop,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  event.badgeBottom,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: event.isRecurring
-                                  ? AppColors.cardBlue
-                                  : (event.status == "Sedang Berjalan"
-                                        ? Colors.red.shade400
-                                        : AppColors.accent),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              event.status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time_rounded,
-                                color: Colors.white70,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                event.time,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              const Icon(
-                                Icons.location_on_rounded,
-                                color: Colors.white70,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  event.location,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildHorizontalProductShimmer(double width, double height) {
-    return SizedBox(
-      height: height * 0.34,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: 2,
-        itemBuilder: (context, index) {
-          return Container(
-            width: width * 0.55,
-            margin: const EdgeInsets.only(right: 16, bottom: 15),
-            child: ShimmerPlaceholder(
-              width: width * 0.55,
-              height: height * 0.34,
-              borderRadius: 24,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildHorizontalProducts(double width, double height) {
-    if (controller.products.isEmpty) {
-      return _buildEmptySection("Belum ada produk saat ini.");
-    }
-
-    return SizedBox(
-      height: height * 0.34,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: controller.products.length,
-        itemBuilder: (context, index) {
-          final product = controller.products[index];
-          return _productCard(product, width);
-        },
-      ),
-    );
-  }
-
-  Widget _productCard(UmkmModel product, double width) {
-    return Container(
-      width: width * 0.55,
-      margin: const EdgeInsets.only(right: 16, bottom: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Get.toNamed(Routes.UMKM_DETAIL, arguments: product),
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 5,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                    child: CachedNetworkImage(
-                      imageUrl: product.image,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const ShimmerPlaceholder(
-                        width: double.infinity,
-                        height: double.infinity,
-                        borderRadius: 0,
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade100,
-                        child: const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        product.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        product.price,
-                        style: const TextStyle(
-                          color: AppColors.accent,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppColors.accent.withOpacity(0.15),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.storefront_rounded,
-                              size: 14,
-                              color: AppColors.accent,
-                            ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                product.storeName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.accent,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 
@@ -840,16 +569,30 @@ class HomeView extends GetView<HomeController> {
       ),
     );
   }
+}
 
-  Widget _buildEmptySection(String message) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 30),
-      alignment: Alignment.center,
-      child: Text(
-        message,
-        style: const TextStyle(color: Colors.grey, fontSize: 13),
-      ),
-    );
+class _StickyMenuDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickyMenuDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 110.0;
+
+  @override
+  double get minExtent => 110.0;
+
+  @override
+  bool shouldRebuild(covariant _StickyMenuDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }

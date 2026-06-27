@@ -25,42 +25,46 @@ class EventView extends GetView<EventController> {
         onRefresh: () => controller.fetchEventsData(),
         color: AppColors.primary,
         backgroundColor: Colors.white,
-        child: Obx(() {
-          if (controller.isLoading.value &&
-              controller.allOngoingEvents.isEmpty) {
-            return _buildFullPageShimmer(context, screenWidth, screenHeight);
-          }
-
-          return CustomScrollView(
-            controller: mainController.eventScrollController,
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: ClampingScrollPhysics(),
+        child: CustomScrollView(
+          controller: mainController.eventScrollController,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics(),
+          ),
+          slivers: [
+            const SliverToBoxAdapter(
+              child: MainHeader(
+                title: "Event Tegal",
+                subtitle: "Temukan event menarik di Kota Tegal",
+                hintText: "Cari event di Tegal...",
+              ),
             ),
-            slivers: [
-              const SliverToBoxAdapter(
-                child: MainHeader(
-                  title: "Event Tegal",
-                  subtitle: "Temukan event menarik di Kota Tegal",
-                  hintText: "Cari event di Tegal...",
-                ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _StickyEventCategoryDelegate(
-                  child: Container(
-                    color: AppColors.background,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 10,
-                    ),
-                    child: _buildCategories(),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyEventCategoryDelegate(
+                child: Container(
+                  color: AppColors.background,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 10,
                   ),
+                  child: _buildCategories(),
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              sliver: SliverToBoxAdapter(
+                child: Obx(() {
+                  if (controller.isLoading.value &&
+                      controller.allOngoingEvents.isEmpty) {
+                    return _buildBodyShimmer(
+                      context,
+                      screenWidth,
+                      screenHeight,
+                    );
+                  }
+
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 15),
@@ -93,60 +97,32 @@ class EventView extends GetView<EventController> {
                             )
                           : _buildNewsList(screenWidth),
                     ],
-                  ),
-                ),
+                  );
+                }),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 110)),
-            ],
-          );
-        }),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFullPageShimmer(
-    BuildContext context,
-    double width,
-    double height,
-  ) {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const MainHeader(
-            title: "Event Tegal",
-            subtitle: "Temukan event menarik di Kota Tegal",
-            hintText: "Cari event di Tegal...",
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 15),
-                _buildSliderShimmer(),
-                const SizedBox(height: 15),
-                ShimmerPlaceholder(
-                  width: width * 0.45,
-                  height: 20,
-                  borderRadius: 6,
-                ),
-                const SizedBox(height: 15),
-                _buildEventListShimmer(width),
-                const SizedBox(height: 30),
-                ShimmerPlaceholder(
-                  width: width * 0.35,
-                  height: 20,
-                  borderRadius: 6,
-                ),
-                const SizedBox(height: 15),
-                _buildNewsListShimmer(width),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildBodyShimmer(BuildContext context, double width, double height) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 15),
+        _buildSliderShimmer(),
+        const SizedBox(height: 15),
+        ShimmerPlaceholder(width: width * 0.45, height: 20, borderRadius: 6),
+        const SizedBox(height: 15),
+        _buildEventListShimmer(width),
+        const SizedBox(height: 30),
+        ShimmerPlaceholder(width: width * 0.35, height: 20, borderRadius: 6),
+        const SizedBox(height: 15),
+        _buildNewsListShimmer(width),
+      ],
     );
   }
 

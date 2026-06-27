@@ -15,42 +15,54 @@ class UmkmView extends GetView<UmkmController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const MainHeader(
-            title: "Toko Budaya",
-            subtitle: "Dukung UMKM lokal Kota Tegal",
-            hintText: "Cari produk UMKM...",
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchProducts(),
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics(),
           ),
-          Expanded(
-            child: RefreshIndicator(
-              color: AppColors.primary,
-              onRefresh: () => controller.fetchProducts(),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 25),
-                    _buildCategoryTabs(),
-                    const SizedBox(height: 25),
-                    Obx(() {
-                      if (controller.isLoading.value) {
-                        return _buildShimmerGrid(context);
-                      }
-
-                      final products = controller.filteredProducts;
-                      if (products.isEmpty) {
-                        return _buildEmptyState();
-                      }
-                      return _buildProductGrid(products);
-                    }),
-                    const SizedBox(height: 110),
-                  ],
+          slivers: [
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const MainHeader(
+                  title: "Toko Budaya",
+                  subtitle: "Dukung UMKM lokal Kota Tegal",
+                  hintText: "Cari produk UMKM...",
                 ),
               ),
             ),
-          ),
-        ],
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyUmkmCategoryDelegate(
+                child: Container(
+                  color: AppColors.background,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: _buildCategoryTabs(),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.only(bottom: 20),
+              sliver: SliverToBoxAdapter(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return _buildShimmerGrid(context);
+                  }
+
+                  final products = controller.filteredProducts;
+                  if (products.isEmpty) {
+                    return _buildEmptyState();
+                  }
+                  return _buildProductGrid(products);
+                }),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
+          ],
+        ),
       ),
     );
   }
@@ -369,5 +381,31 @@ class UmkmView extends GetView<UmkmController> {
         ),
       ],
     );
+  }
+}
+
+class _StickyUmkmCategoryDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickyUmkmCategoryDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 70.0;
+
+  @override
+  double get minExtent => 70.0;
+
+  @override
+  bool shouldRebuild(covariant _StickyUmkmCategoryDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }
