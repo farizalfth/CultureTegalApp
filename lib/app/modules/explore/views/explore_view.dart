@@ -15,6 +15,7 @@ class ExploreView extends GetView<ExploreController> {
   @override
   Widget build(BuildContext context) {
     final mainController = Get.find<MainController>();
+    final double screenWidth = context.width;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -56,9 +57,8 @@ class ExploreView extends GetView<ExploreController> {
                     return _buildErrorState();
                   }
 
-                  if (controller.isLoading.value &&
-                      controller.allData.isEmpty) {
-                    return _buildLoadingState();
+                  if (controller.isLoading.value) {
+                    return _buildBodyShimmer(context, screenWidth);
                   }
 
                   final sliderItems = controller.activeSliderItems;
@@ -77,22 +77,97 @@ class ExploreView extends GetView<ExploreController> {
     );
   }
 
-  Widget _buildLoadingState() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 120),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: AppColors.primary),
-            SizedBox(height: 16),
-            Text(
-              "Memuat data keindahan budaya...",
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-          ],
+  Widget _buildBodyShimmer(BuildContext context, double width) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const ShimmerPlaceholder(
+          width: double.infinity,
+          height: 200,
+          borderRadius: 28,
         ),
+        const SizedBox(height: 30),
+        const ShimmerPlaceholder(width: 150, height: 20, borderRadius: 6),
+        const SizedBox(height: 15),
+        _buildHorizontalPopularShimmer(),
+        const SizedBox(height: 30),
+        const ShimmerPlaceholder(width: 180, height: 20, borderRadius: 6),
+        const SizedBox(height: 15),
+        _buildVerticalRecommendationShimmer(width),
+      ],
+    );
+  }
+
+  Widget _buildHorizontalPopularShimmer() {
+    return SizedBox(
+      height: 210,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 2,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 180,
+            margin: const EdgeInsets.only(right: 18, bottom: 5),
+            child: const ShimmerPlaceholder(
+              width: 180,
+              height: 210,
+              borderRadius: 24,
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  Widget _buildVerticalRecommendationShimmer(double width) {
+    return Column(
+      children: List.generate(2, (index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 15),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+                const ShimmerPlaceholder(
+                  width: 90,
+                  height: 90,
+                  borderRadius: 18,
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ShimmerPlaceholder(
+                        width: 60,
+                        height: 15,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: width * 0.45,
+                        height: 18,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerPlaceholder(
+                        width: width * 0.3,
+                        height: 14,
+                        borderRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 
