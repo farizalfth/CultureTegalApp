@@ -21,7 +21,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Masukkan email Anda yang terdaftar. Kami akan mengirimkan tautan untuk mengatur ulang kata sandi.',
+              'Masukkan email Anda yang terdaftar. Kami akan mengirimkan kode OTP untuk mengatur ulang kata sandi.',
               style: TextStyle(fontSize: 16, color: AppColors.primary),
             ),
             const SizedBox(height: 24),
@@ -55,7 +55,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                 ),
                 onPressed: controller.isLoading.value
                     ? null
-                    : controller.sendResetLink,
+                    : controller.sendResetOtp,
                 child: controller.isLoading.value
                     ? const SizedBox(
                         height: 24,
@@ -63,7 +63,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                         child: CircularProgressIndicator(color: Colors.white),
                       )
                     : const Text(
-                        'Kirim Tautan',
+                        'Kirim Kode OTP',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

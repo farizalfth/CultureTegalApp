@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../controllers/detail_event_controller.dart';
 import '../../../utils/shimmer_placeholder.dart';
+import '../../../routes/app_pages.dart';
 
 class DetailEventView extends GetView<DetailEventController> {
   const DetailEventView({super.key});
@@ -277,7 +278,12 @@ class DetailEventView extends GetView<DetailEventController> {
                             ),
                             const SizedBox(width: 15),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Get.toNamed(
+                                  Routes.MAP_EXPLORE,
+                                  arguments: {'targetId': event.id},
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFD06A33),
                                 elevation: 0,

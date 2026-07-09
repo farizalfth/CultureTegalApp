@@ -75,7 +75,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                           ),
                           decoration: InputDecoration(
                             counterText: "",
-                            hintText: "00000000",
+                            hintText: "000000",
                             hintStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,

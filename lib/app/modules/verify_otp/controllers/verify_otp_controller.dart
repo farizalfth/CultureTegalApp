@@ -10,6 +10,7 @@ class VerifyOtpController extends GetxController {
 
   late final String email;
   late final String name;
+  late final bool isRecovery;
 
   var isLoading = false.obs;
   var resendCooldown = 0.obs;
@@ -22,14 +23,15 @@ class VerifyOtpController extends GetxController {
     final Map<String, dynamic> args = Get.arguments ?? {};
     email = args['email'] ?? '';
     name = args['name'] ?? '';
+    isRecovery = args['isRecovery'] ?? false;
   }
 
   Future<void> verifyOtp() async {
     final code = otpController.text.trim();
-    if (code.isEmpty || code.length < 8) {
+    if (code.isEmpty || code.length < 6) {
       Get.snackbar(
         'Validasi Gagal',
-        'Silakan masukkan 8 digit kode verifikasi dengan benar.',
+        'Silakan masukkan 6 digit kode verifikasi dengan benar.',
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
@@ -38,7 +40,18 @@ class VerifyOtpController extends GetxController {
 
     isLoading.value = true;
     try {
-      await _authService.verifyRegisterOtp(email, code);
+      if (isRecovery) {
+        await _authService.verifyPasswordResetOtp(email, code);
+        Get.snackbar(
+          'Verifikasi Berhasil',
+          'Silakan ubah kata sandi akun Anda.',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        Get.offNamed('/update-password');
+      } else {
+        await _authService.verifyRegisterOtp(email, code);
+      }
     } catch (e) {
       Get.snackbar(
         'Verifikasi Gagal',
@@ -56,7 +69,11 @@ class VerifyOtpController extends GetxController {
 
     isLoading.value = true;
     try {
-      await _authService.resendRegisterOtp(email);
+      if (isRecovery) {
+        await _authService.sendPasswordResetOtp(email);
+      } else {
+        await _authService.resendRegisterOtp(email);
+      }
       Get.snackbar(
         'OTP Dikirim',
         'Kode verifikasi baru telah dikirimkan ke email Anda.',

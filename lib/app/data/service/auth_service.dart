@@ -13,6 +13,8 @@ class AuthService extends GetxService {
   final SupabaseClient supabase = Supabase.instance.client;
   late final String apiUrl;
 
+  bool _isRecoveringPassword = false;
+
   Future<AuthService> init() async {
     apiUrl = dotenv.env['FLASK_API_URL']!;
     final String webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID']!;
@@ -29,9 +31,19 @@ class AuthService extends GetxService {
 
       if (event == AuthChangeEvent.passwordRecovery) {
         developer.log("Event Lupa Sandi Terdeteksi");
+        _isRecoveringPassword = true;
         Get.toNamed('/update-password');
       } else if (event == AuthChangeEvent.signedIn && session != null) {
         developer.log("Event Pengguna Masuk/Terverifikasi Terdeteksi");
+
+        if (_isRecoveringPassword) {
+          developer.log(
+            "Mengalihkan ke halaman pembaruan sandi tanpa melakukan sinkronisasi backend.",
+          );
+          _isRecoveringPassword = false;
+          Get.offAllNamed('/update-password');
+          return;
+        }
 
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           Get.dialog(
@@ -122,6 +134,40 @@ class AuthService extends GetxService {
     } on AuthException catch (e) {
       throw e.message;
     } catch (e) {
+      throw 'Terjadi kesalahan sistem: $e';
+    }
+  }
+
+  Future<void> sendPasswordResetOtp(String email) async {
+    try {
+      await supabase.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      if (e.message.contains('not found')) {
+        throw 'Email tidak terdaftar di sistem kami.';
+      }
+      throw 'Gagal mengirim OTP reset sandi: ${e.message}';
+    } catch (e) {
+      throw 'Terjadi kesalahan sistem: $e';
+    }
+  }
+
+  Future<void> verifyPasswordResetOtp(String email, String token) async {
+    try {
+      _isRecoveringPassword = true;
+      final AuthResponse res = await supabase.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.recovery,
+      );
+
+      if (res.session == null) {
+        throw 'Gagal mendapatkan sesi aktif untuk pemulihan kata sandi.';
+      }
+    } on AuthException catch (e) {
+      _isRecoveringPassword = false;
+      throw e.message;
+    } catch (e) {
+      _isRecoveringPassword = false;
       throw 'Terjadi kesalahan sistem: $e';
     }
   }

@@ -137,7 +137,11 @@ class HomeView extends GetView<HomeController> {
           Icons.explore_rounded,
           () => Get.find<MainController>().changePage(1),
         ),
-        _quickActionItem("Peta\nBudaya", Icons.map_rounded, () {}),
+        _quickActionItem(
+          "Peta\nBudaya",
+          Icons.map_rounded,
+          () => Get.toNamed(Routes.MAP_EXPLORE),
+        ),
         _quickActionItem(
           "Kuis\nBudaya",
           Icons.quiz_rounded,

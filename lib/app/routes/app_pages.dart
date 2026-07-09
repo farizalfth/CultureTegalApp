@@ -18,6 +18,8 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/main/bindings/main_binding.dart';
 import '../modules/main/views/main_view.dart';
+import '../modules/map_explore/bindings/map_explore_binding.dart';
+import '../modules/map_explore/views/map_explore_view.dart';
 import '../modules/news/bindings/news_detail_binding.dart';
 import '../modules/news/bindings/news_list_binding.dart';
 import '../modules/news/views/news_detail_view.dart';
@@ -153,6 +155,11 @@ class AppPages {
       name: _Paths.UMKM_DETAIL,
       page: () => const UmkmDetailView(),
       binding: UmkmDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.MAP_EXPLORE,
+      page: () => const MapExploreView(),
+      binding: MapExploreBinding(),
     ),
   ];
 }

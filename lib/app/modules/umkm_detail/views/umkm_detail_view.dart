@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/app_colors.dart';
 import '../controllers/umkm_detail_controller.dart';
+import '../../../routes/app_pages.dart';
 
 class UmkmDetailView extends GetView<UmkmDetailController> {
   const UmkmDetailView({super.key});
@@ -159,7 +160,12 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                                   color: Colors.blue,
                                   size: 28,
                                 ),
-                                onPressed: () => controller.launchMaps(),
+                                onPressed: () {
+                                  Get.toNamed(
+                                    Routes.MAP_EXPLORE,
+                                    arguments: {'targetId': product.id},
+                                  );
+                                },
                                 tooltip: "Petunjuk Arah",
                               ),
                           ],
@@ -357,7 +363,12 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                           Icons.map_outlined,
                           color: Colors.blue,
                         ),
-                        onPressed: () => controller.launchMaps(),
+                        onPressed: () {
+                          Get.toNamed(
+                            Routes.MAP_EXPLORE,
+                            arguments: {'targetId': product.id},
+                          );
+                        },
                       ),
                     ),
                   ),
