@@ -21,6 +21,7 @@ abstract class Routes {
   static const UPDATE_PASSWORD = _Paths.UPDATE_PASSWORD;
   static const VERIFY_OTP = _Paths.VERIFY_OTP;
   static const UMKM_DETAIL = _Paths.UMKM_DETAIL;
+  static const MAP_EXPLORE = _Paths.MAP_EXPLORE;
 }
 
 abstract class _Paths {
@@ -44,4 +45,5 @@ abstract class _Paths {
   static const UPDATE_PASSWORD = '/update-password';
   static const VERIFY_OTP = '/verify-otp';
   static const UMKM_DETAIL = '/umkm-detail';
+  static const MAP_EXPLORE = '/map-explore';
 }

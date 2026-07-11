@@ -225,7 +225,11 @@ class ExploreView extends GetView<ExploreController> {
         const SizedBox(height: 15),
         _buildPopularCategories(),
         const SizedBox(height: 30),
-        _buildSectionHeader("Jelajah Sekitar Anda", action: "Lihat Peta"),
+        _buildSectionHeader(
+          "Jelajah Sekitar Anda",
+          action: "Lihat Peta",
+          onTap: () => Get.toNamed(Routes.MAP_EXPLORE),
+        ),
         const SizedBox(height: 15),
         _buildNearbyMapSection(),
         const SizedBox(height: 30),
@@ -250,7 +254,11 @@ class ExploreView extends GetView<ExploreController> {
           _buildHeroSlider(context, sliders),
           const SizedBox(height: 30),
         ],
-        _buildSectionHeader("Lokasi Terdekat", action: "Buka Peta"),
+        _buildSectionHeader(
+          "Lokasi Terdekat",
+          action: "Buka Peta",
+          onTap: () => Get.toNamed(Routes.MAP_EXPLORE),
+        ),
         const SizedBox(height: 15),
         _buildNearbyMapSection(),
         const SizedBox(height: 30),
@@ -568,45 +576,48 @@ class ExploreView extends GetView<ExploreController> {
   }
 
   Widget _buildNearbyMapSection() {
-    return Container(
-      height: 160,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Icon(
-                Icons.map_outlined,
-                size: 50,
-                color: AppColors.primary.withOpacity(0.2),
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(24),
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.location_on, color: AppColors.accent, size: 18),
-                SizedBox(width: 8),
-                Text(
-                  "Lihat lokasi budaya di sekitar anda",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+    return GestureDetector(
+      onTap: () => Get.toNamed(Routes.MAP_EXPLORE),
+      child: Container(
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: Icon(
+                  Icons.map_outlined,
+                  size: 50,
+                  color: AppColors.primary.withOpacity(0.2),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.location_on, color: AppColors.accent, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    "Lihat lokasi budaya di sekitar anda",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -775,7 +786,11 @@ class ExploreView extends GetView<ExploreController> {
     );
   }
 
-  Widget _buildSectionHeader(String title, {String action = "Lihat Semua"}) {
+  Widget _buildSectionHeader(
+    String title, {
+    String action = "Lihat Semua",
+    VoidCallback? onTap,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -788,7 +803,7 @@ class ExploreView extends GetView<ExploreController> {
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: onTap ?? () {},
           style: TextButton.styleFrom(
             minimumSize: Size.zero,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
