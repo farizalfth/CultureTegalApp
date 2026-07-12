@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../data/models/culture_model.dart';
@@ -467,24 +469,39 @@ class ExploreView extends GetView<ExploreController> {
   }
 
   Widget _buildPopularCategories() {
-    final historyPlaces = controller.allData
-        .where((p) => p.category == "Sejarah")
-        .toList();
-    return SizedBox(
-      height: 210,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: historyPlaces.length,
-        itemBuilder: (context, index) {
-          final place = historyPlaces[index];
-          return GestureDetector(
-            onTap: () => Get.toNamed(Routes.DETAIL_BUDAYA, arguments: place),
-            child: _popularCard(place.title, place.category, place.image),
-          );
-        },
-      ),
-    );
+    return Obx(() {
+      final historyPlaces = controller.allData
+          .where((p) => p.category == "Sejarah")
+          .toList();
+
+      if (historyPlaces.isEmpty) {
+        return const SizedBox(
+          height: 210,
+          child: Center(
+            child: Text(
+              "Belum ada kategori populer",
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ),
+        );
+      }
+
+      return SizedBox(
+        height: 210,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: historyPlaces.length,
+          itemBuilder: (context, index) {
+            final place = historyPlaces[index];
+            return GestureDetector(
+              onTap: () => Get.toNamed(Routes.DETAIL_BUDAYA, arguments: place),
+              child: _popularCard(place.title, place.category, place.image),
+            );
+          },
+        ),
+      );
+    });
   }
 
   Widget _popularCard(String title, String tag, String img) {
@@ -576,44 +593,81 @@ class ExploreView extends GetView<ExploreController> {
   }
 
   Widget _buildNearbyMapSection() {
-    return GestureDetector(
-      onTap: () => Get.toNamed(Routes.MAP_EXPLORE),
-      child: Container(
-        height: 160,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.grey.shade100),
-        ),
-        child: Column(
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
           children: [
-            Expanded(
-              child: Center(
-                child: Icon(
-                  Icons.map_outlined,
-                  size: 50,
-                  color: AppColors.primary.withOpacity(0.2),
+            FlutterMap(
+              options: const MapOptions(
+                initialCenter: LatLng(-6.8694, 109.1256),
+                initialZoom: 12.0,
+                interactionOptions: InteractionOptions(
+                  flags: InteractiveFlag.all,
                 ),
               ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
+                ),
+                Obx(() {
+                  if (controller.allData.isEmpty) {
+                    return const MarkerLayer(markers: []);
+                  }
+                  return MarkerLayer(
+                    markers: controller.allData.map((site) {
+                      return Marker(
+                        point: LatLng(site.latitude, site.longitude),
+                        width: 30,
+                        height: 30,
+                        child: const Icon(
+                          Icons.location_on_rounded,
+                          color: AppColors.accent,
+                          size: 24,
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(24),
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: ElevatedButton.icon(
+                onPressed: () => Get.toNamed(Routes.MAP_EXPLORE),
+                icon: const Icon(
+                  Icons.fullscreen_rounded,
+                  size: 16,
+                  color: Colors.white,
                 ),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.location_on, color: AppColors.accent, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    "Lihat lokasi budaya di sekitar anda",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                label: const Text(
+                  "Peta Besar",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 4,
+                ),
               ),
             ),
           ],
@@ -628,28 +682,14 @@ class ExploreView extends GetView<ExploreController> {
           .map(
             (place) => Padding(
               padding: const EdgeInsets.only(bottom: 15),
-              child: GestureDetector(
-                onTap: () =>
-                    Get.toNamed(Routes.DETAIL_BUDAYA, arguments: place),
-                child: _recommendationCard(
-                  place.title,
-                  place.description,
-                  place.category,
-                  place.image,
-                ),
-              ),
+              child: _recommendationCard(place),
             ),
           )
           .toList(),
     );
   }
 
-  Widget _recommendationCard(
-    String title,
-    String desc,
-    String cat,
-    String imgUrl,
-  ) {
+  Widget _recommendationCard(CultureModel place) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -665,63 +705,83 @@ class ExploreView extends GetView<ExploreController> {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: CachedNetworkImage(
-              imageUrl: imgUrl,
-              width: 90,
-              height: 90,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => const ShimmerPlaceholder(
+          GestureDetector(
+            onTap: () => Get.toNamed(Routes.DETAIL_BUDAYA, arguments: place),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: CachedNetworkImage(
+                imageUrl: place.image,
                 width: 90,
                 height: 90,
-                borderRadius: 18,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const ShimmerPlaceholder(
+                  width: 90,
+                  height: 90,
+                  borderRadius: 18,
+                ),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
           const SizedBox(width: 15),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    cat,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+            child: GestureDetector(
+              onTap: () => Get.toNamed(Routes.DETAIL_BUDAYA, arguments: place),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      place.category,
+                      style: const TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  const SizedBox(height: 6),
+                  Text(
+                    place.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  desc,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    place.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ),
-          const Icon(Icons.bookmark_outline, color: Colors.grey),
+          Obx(() {
+            final isFav = controller.favoritedSiteIds.contains(place.id);
+            return GestureDetector(
+              onTap: () => controller.toggleFavorite(place.id),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  isFav
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_outline_rounded,
+                  color: isFav ? AppColors.accent : Colors.grey,
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -762,7 +822,7 @@ class ExploreView extends GetView<ExploreController> {
             ),
             const SizedBox(height: 18),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () => Get.toNamed(Routes.PENCAPAIAN),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,

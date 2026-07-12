@@ -40,19 +40,18 @@ class CultureProvider extends GetConnect {
   Future<List<CultureModel>> getCultures({
     String? category,
     String? search,
+    int page = 1,
+    int perPage = 20,
   }) async {
     try {
-      String path = '/explore';
-      List<String> queryParams = [];
+      String path = '/explore?page=$page&per_page=$perPage';
       if (category != null && category != "Semua") {
-        queryParams.add('kategori=${Uri.encodeComponent(category)}');
+        path += '&kategori=${Uri.encodeComponent(category)}';
       }
       if (search != null && search.isNotEmpty) {
-        queryParams.add('search=${Uri.encodeComponent(search)}');
+        path += '&search=${Uri.encodeComponent(search)}';
       }
-      if (queryParams.isNotEmpty) {
-        path += '?${queryParams.join('&')}';
-      }
+
       final response = await get(path);
 
       if (response.status.hasError) {
@@ -61,7 +60,8 @@ class CultureProvider extends GetConnect {
 
       final Map<String, dynamic>? body = response.body;
       if (body != null && body['status'] == 'success') {
-        final List<dynamic> rawData = body['data'] ?? [];
+        final Map<String, dynamic> dataMap = body['data'] ?? {};
+        final List<dynamic> rawData = dataMap['items'] ?? [];
         return rawData
             .map((item) => CultureModel.fromJson(item as Map<String, dynamic>))
             .toList();
@@ -160,6 +160,24 @@ class CultureProvider extends GetConnect {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getWordCloud(String locationName) async {
+    try {
+      final response = await get(
+        '/scrape/wordcloud/${Uri.encodeComponent(locationName)}',
+      );
+      if (response.status.hasError) {
+        return [];
+      }
+      final Map<String, dynamic>? body = response.body;
+      if (body != null && body['status'] == 'success') {
+        return body['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 }

@@ -68,15 +68,20 @@ class UmkmDetailController extends GetxController {
       return;
     }
 
-    final mapsUrl = Uri.parse(
-      "https://www.google.com/maps/search/?api=1&query=${product.latitude},${product.longitude}",
+    final String destinationCoords = "${product.latitude},${product.longitude}";
+    final iosAppUrl = Uri.parse("comgooglemaps://?q=$destinationCoords");
+    final androidAppUrl = Uri.parse("google.navigation:q=$destinationCoords");
+    final webUrl = Uri.parse(
+      "https://www.google.com/maps/search/?api=1&query=$destinationCoords",
     );
 
     try {
-      if (await canLaunchUrl(mapsUrl)) {
-        await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
+      if (await canLaunchUrl(iosAppUrl)) {
+        await launchUrl(iosAppUrl);
+      } else if (await canLaunchUrl(androidAppUrl)) {
+        await launchUrl(androidAppUrl);
       } else {
-        throw "Tidak dapat membuka aplikasi Peta.";
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
       _showErrorSnackbar(e.toString());

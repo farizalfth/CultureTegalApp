@@ -1,3 +1,5 @@
+// lib/app/data/service/auth_service.dart
+
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io' show Platform;
@@ -78,6 +80,17 @@ class AuthService extends GetxService {
     });
 
     return this;
+  }
+
+  // Menyediakan mekanisme tunggu yang andal untuk pemulihan sesi asinkronus Supabase
+  Future<void> waitForSession() async {
+    if (supabase.auth.currentSession != null) return;
+    for (int i = 0; i < 30; i++) {
+      if (supabase.auth.currentSession != null) {
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   Future<void> registerWithEmail(

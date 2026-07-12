@@ -40,17 +40,20 @@ class GalleryView extends StatelessWidget {
         onRefresh: () async {
           if (Get.isRegistered<ExploreController>()) {
             await Get.find<ExploreController>().fetchCulturesData();
-            final updatedSite = Get.find<ExploreController>().allData
-                .firstWhere((p) => p.id == detailController.culture.id);
-            detailController.culture = updatedSite;
-            detailController.update();
+            final currentId = detailController.culture?.id;
+            if (currentId != null) {
+              final updatedSite = Get.find<ExploreController>().allData
+                  .firstWhere((p) => p.id == currentId);
+              detailController.culture = updatedSite;
+              detailController.update();
+            }
           }
         },
         color: AppColors.primary,
         backgroundColor: Colors.white,
         child: GetBuilder<DetailBudayaController>(
           builder: (controller) {
-            final List<String> gallery = controller.culture.gallery;
+            final List<String> gallery = controller.culture?.gallery ?? [];
 
             if (gallery.isEmpty) {
               return const Center(

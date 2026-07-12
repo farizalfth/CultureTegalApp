@@ -5,6 +5,7 @@ import '../../../data/models/event_model.dart';
 import '../../../data/models/news_model.dart';
 import '../../../data/providers/event_provider.dart';
 import '../../../data/providers/news_provider.dart';
+import '../../../data/service/auth_service.dart';
 
 class EventController extends GetxController {
   final EventProvider _eventProvider = Get.find<EventProvider>();
@@ -24,17 +25,13 @@ class EventController extends GetxController {
 
   Timer? _timer;
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchEventsData();
-  }
-
   Future<void> fetchEventsData() async {
     try {
       isLoading.value = true;
       hasError.value = false;
       errorMessage.value = "";
+
+      await Get.find<AuthService>().waitForSession();
 
       final Map<String, dynamic> eventData = await _eventProvider.getEvents();
       final List<dynamic> rawEventItems = eventData['items'] ?? [];
@@ -53,10 +50,10 @@ class EventController extends GetxController {
           .toList();
 
       allOngoingEvents.assignAll(
-        fetchedEvents.where((e) => e.status == "Sedang Berjalan").toList(),
+        fetchedEvents.where((e) => e.status == "Sedang Berlangsung").toList(),
       );
       allUpcomingEvents.assignAll(
-        fetchedEvents.where((e) => e.status != "Sedang Berjalan").toList(),
+        fetchedEvents.where((e) => e.status != "Sedang Berlangsung").toList(),
       );
       allNews.assignAll(fetchedNewsList);
 

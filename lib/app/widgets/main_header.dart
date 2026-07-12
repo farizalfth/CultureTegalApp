@@ -202,7 +202,7 @@ class MainHeader extends StatelessWidget {
 
   Widget _buildQuizPointsCard(String points) {
     return GestureDetector(
-      onTap: () => Get.toNamed('/kuis-budaya'),
+      onTap: () => Get.toNamed(Routes.KUIS_BUDAYA),
       child: Container(
         height: 60,
         padding: const EdgeInsets.symmetric(horizontal: 14),
