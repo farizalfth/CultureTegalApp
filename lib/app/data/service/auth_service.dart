@@ -1,5 +1,3 @@
-// lib/app/data/service/auth_service.dart
-
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io' show Platform;
@@ -14,8 +12,8 @@ import 'package:http/http.dart' as http;
 class AuthService extends GetxService {
   final SupabaseClient supabase = Supabase.instance.client;
   late final String apiUrl;
-
   bool _isRecoveringPassword = false;
+  bool _isHandlingAuthError = false;
 
   Future<AuthService> init() async {
     apiUrl = dotenv.env['FLASK_API_URL']!;
@@ -32,16 +30,10 @@ class AuthService extends GetxService {
       final Session? session = data.session;
 
       if (event == AuthChangeEvent.passwordRecovery) {
-        developer.log("Event Lupa Sandi Terdeteksi");
         _isRecoveringPassword = true;
         Get.toNamed('/update-password');
       } else if (event == AuthChangeEvent.signedIn && session != null) {
-        developer.log("Event Pengguna Masuk/Terverifikasi Terdeteksi");
-
         if (_isRecoveringPassword) {
-          developer.log(
-            "Mengalihkan ke halaman pembaruan sandi tanpa melakukan sinkronisasi backend.",
-          );
           _isRecoveringPassword = false;
           Get.offAllNamed('/update-password');
           return;
@@ -62,18 +54,26 @@ class AuthService extends GetxService {
                 user.userMetadata?['full_name'] ?? user.email?.split('@')[0];
 
             await _syncUserToBackend(session.accessToken, name, 'email');
-            developer.log("Sinkronisasi berhasil!");
-
             Get.offAllNamed('/main');
           } catch (e) {
-            developer.log("Gagal sinkronisasi otomatis: $e");
             Get.back();
-            Get.snackbar(
-              'Kesalahan Sistem',
-              'Gagal menyinkronkan data: $e',
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-            );
+            if (e.toString().contains("suspended")) {
+              await logout();
+              Get.snackbar(
+                'Akses Ditolak',
+                'Akun Anda telah ditangguhkan oleh Administrator.',
+                backgroundColor: Colors.red.shade700,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 5),
+              );
+            } else {
+              Get.snackbar(
+                'Kesalahan Sistem',
+                'Gagal menyinkronkan data: $e',
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+              );
+            }
           }
         });
       }
@@ -82,7 +82,6 @@ class AuthService extends GetxService {
     return this;
   }
 
-  // Menyediakan mekanisme tunggu yang andal untuk pemulihan sesi asinkronus Supabase
   Future<void> waitForSession() async {
     if (supabase.auth.currentSession != null) return;
     for (int i = 0; i < 30; i++) {
@@ -91,6 +90,56 @@ class AuthService extends GetxService {
       }
       await Future.delayed(const Duration(milliseconds: 100));
     }
+  }
+
+  Future<void> handleUnauthorizedOrBanned(
+    int statusCode,
+    String responseBody,
+  ) async {
+    if (_isHandlingAuthError) return;
+
+    if (Get.currentRoute == '/login' ||
+        Get.currentRoute == '/register' ||
+        Get.currentRoute == '/forgot-password' ||
+        Get.currentRoute == '/verify-otp') {
+      return;
+    }
+
+    _isHandlingAuthError = true;
+
+    if (statusCode == 403 && responseBody.contains("suspended")) {
+      await logout();
+      Get.snackbar(
+        'Akun Diblokir',
+        'Sesi Anda diakhiri karena akun ini telah ditangguhkan oleh Admin.',
+        backgroundColor: Colors.red.shade800,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 6),
+        snackPosition: SnackPosition.TOP,
+      );
+    } else if (statusCode == 401) {
+      try {
+        final AuthResponse refreshResponse = await supabase.auth
+            .refreshSession();
+        if (refreshResponse.session != null) {
+          _isHandlingAuthError = false;
+          return;
+        }
+      } catch (_) {
+        await logout();
+        Get.snackbar(
+          'Sesi Berakhir',
+          'Sesi Anda telah kedaluwarsa secara permanen. Silakan login kembali.',
+          backgroundColor: Colors.orange.shade800,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+      }
+    }
+
+    Future.delayed(const Duration(seconds: 5), () {
+      _isHandlingAuthError = false;
+    });
   }
 
   Future<void> registerWithEmail(
@@ -106,9 +155,6 @@ class AuthService extends GetxService {
       );
 
       if (res.session != null) {
-        developer.log("=== TOKEN PENDAFTARAN UTUH ===");
-        developer.log(res.session!.accessToken);
-        developer.log("===============================");
         await _syncUserToBackend(res.session!.accessToken, name, 'email');
       }
     } on AuthException catch (e) {
@@ -193,9 +239,6 @@ class AuthService extends GetxService {
       );
 
       if (res.session != null) {
-        developer.log("=== TOKEN MASUK UTUH ===");
-        developer.log(res.session!.accessToken);
-        developer.log("=========================");
         await _syncUserToBackend(res.session!.accessToken, null, 'email');
       }
     } on AuthException catch (e) {
@@ -214,7 +257,6 @@ class AuthService extends GetxService {
     try {
       final GoogleSignInAccount googleUser = await GoogleSignIn.instance
           .authenticate();
-
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
@@ -237,9 +279,6 @@ class AuthService extends GetxService {
       );
 
       if (res.session != null) {
-        developer.log("=== TOKEN GOOGLE UTUH ===");
-        developer.log(res.session!.accessToken);
-        developer.log("=========================");
         await _syncUserToBackend(
           res.session!.accessToken,
           googleUser.displayName ?? 'Pengguna Google',
@@ -283,27 +322,13 @@ class AuthService extends GetxService {
         }),
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode == 403) {
+        throw 'Akun Anda telah ditangguhkan (suspended).';
+      } else if (response.statusCode != 200) {
         throw 'Gagal menyinkronkan data pengguna dengan server Flask.';
       }
     } catch (e) {
-      throw 'Kesalahan sinkronisasi server: $e';
-    }
-  }
-
-  Future<void> sendPasswordResetEmail(String email) async {
-    try {
-      await supabase.auth.resetPasswordForEmail(
-        email,
-        redirectTo: 'culturaltegal://login-callback',
-      );
-    } on AuthException catch (e) {
-      if (e.message.contains('not found')) {
-        throw 'Email tidak terdaftar di sistem kami.';
-      }
-      throw 'Gagal mengirim email reset sandi: ${e.message}';
-    } catch (e) {
-      throw 'Terjadi kesalahan sistem: $e';
+      throw e.toString();
     }
   }
 
@@ -317,7 +342,50 @@ class AuthService extends GetxService {
     }
   }
 
+  Future<void> deleteAccount() async {
+    try {
+      final String? token = currentToken;
+      if (token != null) {
+        final String cleanBase = apiUrl.endsWith('/api/v1')
+            ? apiUrl
+            : '$apiUrl/api/v1';
+        final response = await http.delete(
+          Uri.parse('$cleanBase/users/delete-account'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+
+        if (response.statusCode == 403 || response.statusCode == 401) {
+          handleUnauthorizedOrBanned(response.statusCode, response.body);
+        }
+      }
+
+      await supabase.auth.signOut();
+      await GoogleSignIn.instance.signOut();
+      Get.offAllNamed('/login');
+    } catch (e) {
+      throw 'Gagal menghapus akun: $e';
+    }
+  }
+
   Future<void> logout() async {
+    try {
+      final String? token = currentToken;
+      final String? onesignalId = OneSignal.User.pushSubscription.id;
+
+      if (token != null && onesignalId != null) {
+        await http.post(
+          Uri.parse('$apiUrl/users/onesignal/logout'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'onesignal_id': onesignalId}),
+        );
+      }
+    } catch (e) {
+      developer.log(e.toString());
+    }
+
     await supabase.auth.signOut();
     await GoogleSignIn.instance.signOut();
     Get.offAllNamed('/login');

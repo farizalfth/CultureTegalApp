@@ -1,15 +1,17 @@
-import 'package:cultural_tegal/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/app_colors.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/login_controller.dart';
 
-class LoginView extends GetView<LoginController> {
+class LoginView extends StatelessWidget {
   const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(LoginController());
     final bool isShortScreen = context.height < 750;
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -47,7 +49,7 @@ class LoginView extends GetView<LoginController> {
                   ),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(30, 35, 30, 40),
+                    padding: EdgeInsets.fromLTRB(30, 35, 30, 40 + safeBottom),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.vertical(
@@ -116,7 +118,7 @@ class LoginView extends GetView<LoginController> {
                         const SizedBox(height: 20),
                         _buildTextField(
                           icon: Icons.email_outlined,
-                          hint: "Email atau Nomor Telepon",
+                          hint: "Email",
                           controller: controller.emailController,
                         ),
                         const SizedBox(height: 15),

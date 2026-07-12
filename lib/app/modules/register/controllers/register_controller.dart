@@ -5,16 +5,15 @@ import '../../../data/service/auth_service.dart';
 class RegisterController extends GetxController {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
   final AuthService _authService = Get.find<AuthService>();
 
-  var isPasswordHidden = true.obs;
-  var isConfirmPasswordHidden = true.obs;
-  var isAgree = true.obs;
-  var isLoading = false.obs;
+  final RxBool isPasswordHidden = true.obs;
+  final RxBool isConfirmPasswordHidden = true.obs;
+  final RxBool isAgree = true.obs;
+  final RxBool isLoading = false.obs;
 
   void togglePasswordVisibility() =>
       isPasswordHidden.value = !isPasswordHidden.value;
@@ -124,7 +123,6 @@ class RegisterController extends GetxController {
   void onClose() {
     nameController.dispose();
     emailController.dispose();
-    phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.onClose();

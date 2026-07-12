@@ -1,129 +1,116 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../data/repositories/user_repository.dart';
+import '../../../data/service/user_service.dart';
+import '../../../data/service/auth_service.dart';
 
 class EditProfileController extends GetxController {
-  //==========================
-  // Text Controllers
-  //==========================
+  final UserRepository _userRepository = Get.find<UserRepository>();
+  final UserService userService = UserService.to;
 
   final nameController = TextEditingController();
-  final usernameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
-  final bioController = TextEditingController();
 
-  //==========================
-  // Observable
-  //==========================
-
-  final isLoading = false.obs;
+  final RxBool isLoading = false.obs;
+  final RxnString localImagePath = RxnString();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void onInit() {
     super.onInit();
-
-    loadProfile();
+    loadProfileData();
   }
 
-  //==========================
-  // Load Data
-  //==========================
-
-  void loadProfile() {
-    // sementara dummy data
-
-    nameController.text = "Nadhif Basalamah";
-    usernameController.text = "nadhif.bas";
-    emailController.text = "nadhif@email.com";
-    phoneController.text = "081234567890";
-    bioController.text =
-        "Menjelajahi sejarah dan budaya Tegal melalui aplikasi Tegal Culture.";
+  void loadProfileData() {
+    final user = userService.user.value;
+    nameController.text = user?.name ?? '';
+    emailController.text = user?.email ?? '';
   }
-
-  //==========================
-  // Change Photo
-  //==========================
 
   Future<void> changePhoto() async {
-    Get.snackbar(
-      "Info",
-      "Fitur ganti foto akan segera tersedia.",
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    try {
+      final XFile? file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 70,
+      );
+      if (file != null) {
+        localImagePath.value = file.path;
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Gagal Memilih Foto",
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
-  //==========================
-  // Save Profile
-  //==========================
-
   Future<void> saveProfile() async {
-    if (nameController.text.trim().isEmpty) {
-      Get.snackbar(
-        "Peringatan",
-        "Nama lengkap tidak boleh kosong",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
+    final String name = nameController.text.trim();
 
-    if (usernameController.text.trim().isEmpty) {
+    if (name.isEmpty) {
       Get.snackbar(
         "Peringatan",
-        "Username tidak boleh kosong",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    if (emailController.text.trim().isEmpty) {
-      Get.snackbar(
-        "Peringatan",
-        "Email tidak boleh kosong",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    if (phoneController.text.trim().isEmpty) {
-      Get.snackbar(
-        "Peringatan",
-        "Nomor telepon tidak boleh kosong",
-        snackPosition: SnackPosition.BOTTOM,
+        "Nama lengkap wajib diisi.",
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
       );
       return;
     }
 
     isLoading.value = true;
+    try {
+      final String? token = Get.find<AuthService>().currentToken;
+      if (token == null) {
+        throw Exception("Sesi otentikasi kedaluwarsa. Silakan login kembali.");
+      }
 
-    await Future.delayed(
-      const Duration(seconds: 2),
-    );
+      if (localImagePath.value != null) {
+        final newPic = await _userRepository.updateProfilePicture(
+          localImagePath.value!,
+          token,
+        );
+        if (newPic == null) {
+          throw Exception("Gagal mengunggah foto profil ke server.");
+        }
+      }
 
-    isLoading.value = false;
+      final bool success = await _userRepository.updateProfile(name);
+      if (success) {
+        await _userRepository.claimActionBadge("Identitas Baru");
 
-    Get.snackbar(
-      "Berhasil",
-      "Profil berhasil diperbarui",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
-
-    Get.back();
+        await userService.refreshUserData();
+        Get.back();
+        Get.snackbar(
+          "Sukses",
+          "Profil Anda berhasil diperbarui.",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        throw Exception("Gagal menyinkronkan data profil.");
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Pembaruan Gagal",
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
-
-  //==========================
-  // Dispose
-  //==========================
 
   @override
   void onClose() {
     nameController.dispose();
-    usernameController.dispose();
     emailController.dispose();
-    phoneController.dispose();
-    bioController.dispose();
-
     super.onClose();
   }
 }

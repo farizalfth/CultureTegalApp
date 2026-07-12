@@ -13,6 +13,18 @@ class CultureProvider extends GetConnect {
     httpClient.baseUrl = apiHost;
     httpClient.timeout = const Duration(seconds: 10);
 
+    httpClient.addResponseModifier((request, response) {
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        if (Get.isRegistered<AuthService>()) {
+          Get.find<AuthService>().handleUnauthorizedOrBanned(
+            response.statusCode!,
+            response.bodyString ?? "",
+          );
+        }
+      }
+      return response;
+    });
+
     httpClient.addRequestModifier<dynamic>((request) async {
       request.headers['Accept'] = 'application/json';
 
@@ -166,7 +178,7 @@ class CultureProvider extends GetConnect {
   Future<List<dynamic>> getWordCloud(String locationName) async {
     try {
       final response = await get(
-        '/scrape/wordcloud/${Uri.encodeComponent(locationName)}',
+        '/explore/wordcloud/${Uri.encodeComponent(locationName)}',
       );
       if (response.status.hasError) {
         return [];

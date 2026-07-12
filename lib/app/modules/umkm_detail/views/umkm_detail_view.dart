@@ -10,6 +10,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
   @override
   Widget build(BuildContext context) {
     final product = controller.product;
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -207,6 +208,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                         ),
                       ),
                       const SizedBox(height: 32),
+                      _buildWordCloudSection(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -364,7 +366,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                           },
                         );
                       }),
-                      const SizedBox(height: 120),
+                      SizedBox(height: 120 + safeBottom),
                     ],
                   ),
                 ),
@@ -388,7 +390,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
             ),
           ),
           Positioned(
-            bottom: 20,
+            bottom: safeBottom > 0 ? safeBottom + 10 : 20,
             left: 20,
             right: 20,
             child: Row(
@@ -467,5 +469,90 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
         ],
       ),
     );
+  }
+
+  Widget _buildWordCloudSection() {
+    return Obx(() {
+      if (controller.isWordCloudLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        );
+      }
+
+      if (controller.wordCloudData.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.cloud_queue_rounded, color: AppColors.accent),
+              SizedBox(width: 8),
+              Text(
+                "Kata Kunci Pembeli",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Hasil analisis sentimen Big Data eksternal",
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: controller.wordCloudData.map((item) {
+                final word = item['text'] as String;
+                final weight = item['value'] as int;
+                final double scaledFontSize =
+                    11.0 + (weight / 5).clamp(0.0, 10.0);
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.accent.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    word,
+                    style: TextStyle(
+                      fontSize: scaledFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      );
+    });
   }
 }

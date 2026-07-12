@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../../../data/service/auth_service.dart';
 
 class AiScanController extends GetxController {
@@ -41,7 +42,7 @@ class AiScanController extends GetxController {
         scanHistory.assignAll(data);
       }
     } catch (e) {
-      debugPrint("Gagal mengambil histori scan: $e");
+      debugPrint(e.toString());
     } finally {
       isHistoryLoading.value = false;
     }
@@ -79,33 +80,20 @@ class AiScanController extends GetxController {
         final Map<String, dynamic> body = json.decode(response.body);
         scanResult.value = body['data'] ?? {};
         await loadScanHistory();
-      } else {
-        Get.snackbar(
-          "Pindaian Gagal",
-          "Koneksi server terganggu. Mengaktifkan simulator kuliner...",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
-        _triggerMockScanResult();
       }
     } catch (e) {
-      _triggerMockScanResult();
+      Get.snackbar(
+        "Koneksi Bermasalah",
+        "Gagal terhubung dengan server pengenal kuliner AI.",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
-
-  void _triggerMockScanResult() {
-    scanResult.value = {
-      "predicted_label": "kupat_glabed",
-      "confidence": 0.94,
-      "food_details": {
-        "nama_makanan": "Kupat Glabed",
-        "deskripsi":
-            "Kupat Glabed adalah kuliner khas Kota Tegal berupa potongan ketupat yang disajikan dengan siraman kuah kuning kental yang gurih khas (glabed), dilengkapi taburan bawang goreng, kerupuk mie, dan sate blengong.",
-        "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      },
-      "image_url": "/static/uploads/default.jpg",
-    };
+  
+  Future<void> launchVideo(String urlString) async {
+    Get.toNamed('/webview', arguments: urlString);
   }
 }

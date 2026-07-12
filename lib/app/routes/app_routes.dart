@@ -29,6 +29,12 @@ abstract class Routes {
   static const DETAIL_PENCAPAIAN = _Paths.DETAIL_PENCAPAIAN;
   static const AI_SCAN = _Paths.AI_SCAN;
   static const QUIZ = _Paths.QUIZ;
+  static const RIWAYAT_JELAJAH = _Paths.RIWAYAT_JELAJAH;
+  static const SCAN_HISTORY = _Paths.SCAN_HISTORY;
+  static const FAVORIT = _Paths.FAVORIT;
+  static const NOTIFIKASI = _Paths.NOTIFIKASI;
+  static const ANALITIK = _Paths.ANALITIK;
+  static const WEBVIEW = _Paths.WEBVIEW;
 }
 
 abstract class _Paths {
@@ -60,4 +66,10 @@ abstract class _Paths {
   static const DETAIL_PENCAPAIAN = '/detail-pencapaian';
   static const AI_SCAN = '/ai-scan';
   static const QUIZ = '/quiz';
+  static const RIWAYAT_JELAJAH = '/riwayat-jelajah';
+  static const SCAN_HISTORY = '/scan-history';
+  static const FAVORIT = '/favorit';
+  static const NOTIFIKASI = '/notifikasi';
+  static const ANALITIK = '/analitik';
+  static const WEBVIEW = '/webview';
 }
