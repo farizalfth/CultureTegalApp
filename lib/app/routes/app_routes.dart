@@ -2,6 +2,7 @@ part of 'app_pages.dart';
 
 abstract class Routes {
   Routes._();
+
   static const HOME = _Paths.HOME;
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
@@ -23,10 +24,16 @@ abstract class Routes {
   static const UMKM_DETAIL = _Paths.UMKM_DETAIL;
   static const MAP_EXPLORE = _Paths.MAP_EXPLORE;
   static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
+  static const KUIS_BUDAYA = _Paths.KUIS_BUDAYA;
+  static const PENCAPAIAN = _Paths.PENCAPAIAN;
+  static const DETAIL_PENCAPAIAN = _Paths.DETAIL_PENCAPAIAN;
+  static const AI_SCAN = _Paths.AI_SCAN;
+  static const QUIZ = _Paths.QUIZ;
 }
 
 abstract class _Paths {
   _Paths._();
+
   static const HOME = '/home';
   static const LOGIN = '/login';
   static const REGISTER = '/register';
@@ -48,4 +55,9 @@ abstract class _Paths {
   static const UMKM_DETAIL = '/umkm-detail';
   static const MAP_EXPLORE = '/map-explore';
   static const EDIT_PROFILE = '/edit-profile';
+  static const KUIS_BUDAYA = '/kuis-budaya';
+  static const PENCAPAIAN = '/pencapaian';
+  static const DETAIL_PENCAPAIAN = '/detail-pencapaian';
+  static const AI_SCAN = '/ai-scan';
+  static const QUIZ = '/quiz';
 }

@@ -133,21 +133,29 @@ class SearchPageController extends GetxController {
   }
 
   Future<void> fetchCultureSearchResults() async {
+    final int activeTabAtStart = selectedTab.value;
     isLoadingCultures.value = true;
     try {
       final list = await _cultureProvider.getCultures(
         category: filter1Value.value,
         search: searchQuery.value,
       );
-      searchedCulturesList.assignAll(list);
+      if (selectedTab.value == activeTabAtStart) {
+        searchedCulturesList.assignAll(list);
+      }
     } catch (e) {
-      searchedCulturesList.clear();
+      if (selectedTab.value == activeTabAtStart) {
+        searchedCulturesList.clear();
+      }
     } finally {
-      isLoadingCultures.value = false;
+      if (selectedTab.value == activeTabAtStart) {
+        isLoadingCultures.value = false;
+      }
     }
   }
 
   Future<void> fetchUmkmSearchResults() async {
+    final int activeTabAtStart = selectedTab.value;
     isLoadingUmkms.value = true;
     try {
       final response = await _umkmProvider.getUmkms(
@@ -157,17 +165,24 @@ class SearchPageController extends GetxController {
         page: 1,
         perPage: 20,
       );
-      final List<dynamic> items = response['data']?['items'] ?? [];
-      final products = items.map((item) => UmkmModel.fromJson(item)).toList();
-      searchedUmkmsList.assignAll(products);
+      if (selectedTab.value == activeTabAtStart) {
+        final List<dynamic> items = response['data']?['items'] ?? [];
+        final products = items.map((item) => UmkmModel.fromJson(item)).toList();
+        searchedUmkmsList.assignAll(products);
+      }
     } catch (e) {
-      searchedUmkmsList.clear();
+      if (selectedTab.value == activeTabAtStart) {
+        searchedUmkmsList.clear();
+      }
     } finally {
-      isLoadingUmkms.value = false;
+      if (selectedTab.value == activeTabAtStart) {
+        isLoadingUmkms.value = false;
+      }
     }
   }
 
   Future<void> fetchEventSearchResults() async {
+    final int activeTabAtStart = selectedTab.value;
     isLoadingEvents.value = true;
     try {
       final response = await _eventProvider.getEvents(
@@ -177,17 +192,24 @@ class SearchPageController extends GetxController {
         page: 1,
         perPage: 20,
       );
-      final List<dynamic> items = response['items'] ?? [];
-      final list = items.map((item) => EventModel.fromJson(item)).toList();
-      searchedEventsList.assignAll(list);
+      if (selectedTab.value == activeTabAtStart) {
+        final List<dynamic> items = response['items'] ?? [];
+        final list = items.map((item) => EventModel.fromJson(item)).toList();
+        searchedEventsList.assignAll(list);
+      }
     } catch (e) {
-      searchedEventsList.clear();
+      if (selectedTab.value == activeTabAtStart) {
+        searchedEventsList.clear();
+      }
     } finally {
-      isLoadingEvents.value = false;
+      if (selectedTab.value == activeTabAtStart) {
+        isLoadingEvents.value = false;
+      }
     }
   }
 
   Future<void> fetchNewsSearchResults() async {
+    final int activeTabAtStart = selectedTab.value;
     isLoadingNews.value = true;
     try {
       final response = await _newsProvider.getNews(
@@ -196,13 +218,19 @@ class SearchPageController extends GetxController {
         page: 1,
         perPage: 20,
       );
-      final List<dynamic> items = response['items'] ?? [];
-      final list = items.map((item) => NewsModel.fromJson(item)).toList();
-      searchedNewsList.assignAll(list);
+      if (selectedTab.value == activeTabAtStart) {
+        final List<dynamic> items = response['items'] ?? [];
+        final list = items.map((item) => NewsModel.fromJson(item)).toList();
+        searchedNewsList.assignAll(list);
+      }
     } catch (e) {
-      searchedNewsList.clear();
+      if (selectedTab.value == activeTabAtStart) {
+        searchedNewsList.clear();
+      }
     } finally {
-      isLoadingNews.value = false;
+      if (selectedTab.value == activeTabAtStart) {
+        isLoadingNews.value = false;
+      }
     }
   }
 

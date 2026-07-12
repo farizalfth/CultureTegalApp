@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../modules/ai_scan/bindings/ai_scan_binding.dart';
+import '../modules/ai_scan/views/ai_scan_view.dart';
 import '../modules/detail_budaya/bindings/detail_budaya_binding.dart';
 import '../modules/detail_budaya/views/detail_budaya_view.dart';
 import '../modules/event/bindings/detail_event_binding.dart';
@@ -24,6 +26,13 @@ import '../modules/news/bindings/news_detail_binding.dart';
 import '../modules/news/bindings/news_list_binding.dart';
 import '../modules/news/views/news_detail_view.dart';
 import '../modules/news/views/news_list_view.dart';
+import '../modules/pencapaian/bindings/pencapaian_binding.dart';
+import '../modules/pencapaian/controllers/pencapaian_controller.dart';
+import '../modules/pencapaian/detail_pencapaian/bindings/detail_pencapaian_binding.dart';
+import '../modules/pencapaian/detail_pencapaian/views/detail_pencapaian_view.dart';
+import '../modules/pencapaian/views/pencapaian_view.dart';
+import '../modules/quiz/bindings/quiz_binding.dart';
+import '../modules/quiz/views/quiz_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/review/bindings/review_binding.dart';
@@ -167,6 +176,31 @@ class AppPages {
       name: _Paths.EDIT_PROFILE,
       page: () => const EditProfileView(),
       binding: EditProfileBinding(),
+      name: _Paths.PENCAPAIAN,
+      page: () => const PencapaianView(),
+      binding: PencapaianBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.DETAIL_PENCAPAIAN,
+      page: () => const DetailPencapaianView(),
+      binding: DetailPencapaianBinding(),
+    ),
+    GetPage(
+      name: _Paths.AI_SCAN,
+      page: () => const AiScanView(),
+      binding: AiScanBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: _Paths.KUIS_BUDAYA,
+      page: () => const QuizView(),
+      binding: QuizBinding(),
+    ),
+    GetPage(
+      name: _Paths.QUIZ,
+      page: () => const QuizView(),
+      binding: QuizBinding(),
     ),
   ];
 }
