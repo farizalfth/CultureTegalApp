@@ -32,7 +32,6 @@ class LoginController extends GetxController {
         passwordController.text.trim(),
       );
     } catch (e) {
-      // DIUBAH: Jika kesalahan terkait "belum dikonfirmasi", arahkan langsung ke verifikasi OTP
       final errorMsg = e.toString();
       if (errorMsg.contains('belum dikonfirmasi') ||
           errorMsg.contains('not confirmed')) {

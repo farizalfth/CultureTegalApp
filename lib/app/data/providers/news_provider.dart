@@ -13,6 +13,18 @@ class NewsProvider extends GetConnect {
     httpClient.baseUrl = apiHost;
     httpClient.timeout = const Duration(seconds: 10);
 
+    httpClient.addResponseModifier((request, response) {
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        if (Get.isRegistered<AuthService>()) {
+          Get.find<AuthService>().handleUnauthorizedOrBanned(
+            response.statusCode!,
+            response.bodyString ?? "",
+          );
+        }
+      }
+      return response;
+    });
+
     httpClient.addRequestModifier<dynamic>((request) async {
       request.headers['Accept'] = 'application/json';
 

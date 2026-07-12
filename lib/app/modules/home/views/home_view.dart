@@ -263,28 +263,28 @@ class HomeView extends GetView<HomeController> {
       childAspectRatio: 1.45,
       children: [
         _featureCard(
+          "Analitik Data",
+          Icons.bar_chart_rounded,
+          AppColors.cardBlue,
+          () => Get.toNamed(Routes.ANALITIK),
+        ),
+        _featureCard(
+          "Event Tegal",
+          Icons.event_note_rounded,
+          AppColors.cardOrange,
+          () => mainController.changePage(3),
+        ),
+        _featureCard(
           "Kebudayaan",
           Icons.account_balance_rounded,
-          AppColors.cardBlue,
-          () => mainController.changePage(1),
-        ),
-        _featureCard(
-          "Pariwisata",
-          Icons.terrain_rounded,
-          AppColors.cardOrange,
-          () => mainController.changePage(1),
-        ),
-        _featureCard(
-          "Kuliner Tegal",
-          Icons.restaurant_rounded,
           AppColors.cardRed,
           () => mainController.changePage(1),
         ),
         _featureCard(
-          "Seni & Event",
-          Icons.theater_comedy_rounded,
+          "UMKM Lokal",
+          Icons.storefront_rounded,
           AppColors.cardBrown,
-          () => mainController.changePage(3),
+          () => mainController.changePage(2),
         ),
       ],
     );

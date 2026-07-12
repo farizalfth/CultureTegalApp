@@ -894,7 +894,7 @@ class _StickyCategoryDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return child;
+    return SizedBox(height: maxExtent, child: child);
   }
 
   @override

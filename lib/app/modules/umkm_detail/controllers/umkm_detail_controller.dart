@@ -1,22 +1,62 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../data/models/umkm_model.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/providers/umkm_provider.dart';
+import '../../../data/service/auth_service.dart';
 
 class UmkmDetailController extends GetxController {
   final UmkmProvider _umkmProvider = Get.find<UmkmProvider>();
+  final AuthService _authService = Get.find<AuthService>();
+  final String baseUrl = dotenv.env['FLASK_API_URL'] ?? '';
 
   late final UmkmModel product;
   final isLoadingReviews = false.obs;
   final reviews = <ReviewModel>[].obs;
+
+  final RxBool isWordCloudLoading = false.obs;
+  final RxList<Map<String, dynamic>> wordCloudData =
+      <Map<String, dynamic>>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     product = Get.arguments as UmkmModel;
     fetchReviewsLimit();
+    _fetchWordCloud();
+  }
+
+  Future<void> _fetchWordCloud() async {
+    isWordCloudLoading.value = true;
+    try {
+      final String cleanBase = baseUrl.endsWith('/api/v1')
+          ? baseUrl
+          : '$baseUrl/api/v1';
+      final response = await http
+          .get(
+            Uri.parse(
+              '$cleanBase/umkm/wordcloud/${Uri.encodeComponent(product.name)}',
+            ),
+            headers: {'Authorization': 'Bearer ${_authService.currentToken}'},
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'] ?? [];
+        wordCloudData.assignAll(List<Map<String, dynamic>>.from(data));
+      } else {
+        wordCloudData.clear();
+      }
+    } catch (e) {
+      wordCloudData.clear();
+    } finally {
+      isWordCloudLoading.value = false;
+    }
   }
 
   Future<void> fetchReviewsLimit() async {
@@ -93,18 +133,7 @@ class UmkmDetailController extends GetxController {
       _showErrorSnackbar("Tautan eksternal tidak tersedia.");
       return;
     }
-
-    final webUrl = Uri.parse(product.externalLink!);
-
-    try {
-      if (await canLaunchUrl(webUrl)) {
-        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-      } else {
-        throw "Tidak dapat membuka browser.";
-      }
-    } catch (e) {
-      _showErrorSnackbar(e.toString());
-    }
+    Get.toNamed('/webview', arguments: product.externalLink!);
   }
 
   void _showErrorSnackbar(String message) {

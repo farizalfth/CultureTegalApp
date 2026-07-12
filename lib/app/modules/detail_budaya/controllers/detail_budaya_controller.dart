@@ -30,6 +30,10 @@ class DetailBudayaController extends GetxController {
   final RxBool isCalculatingDistance = false.obs;
   final RxBool isLoadingSiteDetails = false.obs;
 
+  final RxBool isWordCloudLoading = false.obs;
+  final RxList<Map<String, dynamic>> wordCloudData =
+      <Map<String, dynamic>>[].obs;
+
   Timer? _timer;
 
   @override
@@ -49,6 +53,37 @@ class DetailBudayaController extends GetxController {
     _calculateDynamicDistance();
     _startAutoSlide();
     _awardReadingPointsSecurely();
+    _fetchWordCloud();
+  }
+
+  Future<void> _fetchWordCloud() async {
+    if (culture == null) return;
+    isWordCloudLoading.value = true;
+    try {
+      final String cleanBase = baseUrl.endsWith('/api/v1')
+          ? baseUrl
+          : '$baseUrl/api/v1';
+      final response = await http
+          .get(
+            Uri.parse(
+              '$cleanBase/explore/wordcloud/${Uri.encodeComponent(culture!.title)}',
+            ),
+            headers: {'Authorization': 'Bearer ${_authService.currentToken}'},
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> data = body['data'] ?? [];
+        wordCloudData.assignAll(List<Map<String, dynamic>>.from(data));
+      } else {
+        wordCloudData.clear();
+      }
+    } catch (e) {
+      wordCloudData.clear();
+    } finally {
+      isWordCloudLoading.value = false;
+    }
   }
 
   Future<void> _loadCultureSiteById(String siteId) async {
@@ -59,10 +94,12 @@ class DetailBudayaController extends GetxController {
       final String cleanBase = baseUrl.endsWith('/api/v1')
           ? baseUrl
           : '$baseUrl/api/v1';
-      final response = await http.get(
-        Uri.parse('$cleanBase/explore/$siteId'),
-        headers: {'Authorization': 'Bearer ${_authService.currentToken}'},
-      );
+      final response = await http
+          .get(
+            Uri.parse('$cleanBase/explore/$siteId'),
+            headers: {'Authorization': 'Bearer ${_authService.currentToken}'},
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> body = json.decode(response.body);
@@ -181,7 +218,7 @@ class DetailBudayaController extends GetxController {
 
   Future<void> shareCultureSite() async {
     final String shareText =
-        "Ayo jelajahi dan pelajari sejarah '${culture!.title}' di Tegal Culture! Klik tautan rill untuk melihat lokasi: https://www.google.com/maps/search/?api=1&query=${culture!.latitude},${culture!.longitude}";
+        "Ayo jelajahi dan pelajari sejarah '${culture!.title}' di Tegal Culture! Klik tautan untuk melihat lokasi: https://www.google.com/maps/search/?api=1&query=${culture!.latitude},${culture!.longitude}";
     await Clipboard.setData(ClipboardData(text: shareText));
     Get.snackbar(
       "Tautan Disalin",
@@ -199,14 +236,16 @@ class DetailBudayaController extends GetxController {
       final String cleanBase = baseUrl.endsWith('/api/v1')
           ? baseUrl
           : '$baseUrl/api/v1';
-      final response = await http.post(
-        Uri.parse('$cleanBase/scans/read'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${_authService.currentToken}',
-        },
-        body: json.encode({'site_id': culture!.id}),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$cleanBase/scans/read'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${_authService.currentToken}',
+            },
+            body: json.encode({'site_id': culture!.id}),
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> result = json.decode(response.body);
@@ -220,13 +259,6 @@ class DetailBudayaController extends GetxController {
             colorText: Colors.white,
             duration: const Duration(seconds: 4),
           );
-        } else {
-          Get.snackbar(
-            "Jelajah Budaya",
-            "Kamu telah mempelajari sejarah objek ini sebelumnya.",
-            backgroundColor: AppColors.primary,
-            colorText: Colors.white,
-          );
         }
       }
     } catch (_) {}
@@ -237,14 +269,19 @@ class DetailBudayaController extends GetxController {
       final String cleanBase = baseUrl.endsWith('/api/v1')
           ? baseUrl
           : '$baseUrl/api/v1';
-      final response = await http.post(
-        Uri.parse('$cleanBase/users/favorites/toggle'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${_authService.currentToken}',
-        },
-        body: json.encode({'target_type': 'culture', 'target_id': culture!.id}),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$cleanBase/users/favorites/toggle'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${_authService.currentToken}',
+            },
+            body: json.encode({
+              'target_type': 'culture',
+              'target_id': culture!.id,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         isFavorite.value = !isFavorite.value;
@@ -448,18 +485,20 @@ class DetailBudayaController extends GetxController {
       final String cleanBase = baseUrl.endsWith('/api/v1')
           ? baseUrl
           : '$baseUrl/api/v1';
-      final response = await http.post(
-        Uri.parse('$cleanBase/scans/geofence'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${_authService.currentToken}',
-        },
-        body: json.encode({
-          'site_id': culture!.id,
-          'latitude': userLat,
-          'longitude': userLng,
-        }),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$cleanBase/scans/geofence'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${_authService.currentToken}',
+            },
+            body: json.encode({
+              'site_id': culture!.id,
+              'latitude': userLat,
+              'longitude': userLng,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         await UserService.to.refreshUserData();

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../data/models/models.dart';
 import '../../../data/providers/culture_provider.dart';
 import '../../../data/providers/umkm_provider.dart';
+import '../../../data/repositories/user_repository.dart';
 import '../../../data/service/auth_service.dart';
 import '../../detail_budaya/controllers/detail_budaya_controller.dart';
 import '../../explore/controllers/explore_controller.dart';
@@ -14,6 +15,10 @@ import '../../umkm_detail/controllers/umkm_detail_controller.dart';
 class ReviewController extends GetxController {
   final CultureProvider _cultureProvider = Get.find<CultureProvider>();
   final UmkmProvider _umkmProvider = Get.find<UmkmProvider>();
+  final UserRepository _userRepository = Get.isRegistered<UserRepository>()
+      ? Get.find<UserRepository>()
+      : Get.put(UserRepository(Get.find()));
+
   final ScrollController scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
 
@@ -86,7 +91,7 @@ class ReviewController extends GetxController {
       reviewsList.assignAll(items);
       hasNextPage.value = data['has_next'] as bool? ?? false;
     } catch (e) {
-      debugPrint("Gagal memuat ulasan awal: $e");
+      debugPrint(e.toString());
     } finally {
       isLoading.value = false;
       update();
@@ -120,7 +125,7 @@ class ReviewController extends GetxController {
       hasNextPage.value = data['has_next'] as bool? ?? false;
     } catch (e) {
       currentPage--;
-      debugPrint("Gagal memuat halaman ulasan berikutnya: $e");
+      debugPrint(e.toString());
     } finally {
       isLoadMore.value = false;
       update();
@@ -190,7 +195,7 @@ class ReviewController extends GetxController {
     } catch (e) {
       Get.snackbar(
         "Galat",
-        "Gagal mengambil gambar: $e",
+        "Gagal mengambil gambar",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -283,6 +288,8 @@ class ReviewController extends GetxController {
       }
 
       if (success) {
+        await _userRepository.claimActionBadge("Suara Rakyat");
+
         Get.back();
         Get.snackbar(
           "Sukses",

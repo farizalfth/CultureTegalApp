@@ -7,6 +7,7 @@ class UserService extends GetxService {
   static UserService get to => Get.find();
 
   final UserRepository repository;
+
   UserService(this.repository);
 
   final user = Rxn<UserModel>();
@@ -15,27 +16,27 @@ class UserService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    _initializeUser();
-  }
 
-  Future<void> _initializeUser() async {
-    await _waitForAuth();
-    await refreshUserData();
-    if (user.value != null) {
-      _subscribeToUserChanges(user.value!.id);
-    }
-  }
-
-  Future<void> _waitForAuth() async {
-    for (int i = 0; i < 15; i++) {
-      if (Supabase.instance.client.auth.currentSession?.accessToken != null) {
-        break;
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.signedIn && data.session != null) {
+        refreshUserData();
+        _subscribeToUserChanges(data.session!.user.id);
+      } else if (event == AuthChangeEvent.signedOut) {
+        user.value = null;
+        _unsubscribeFromChanges();
       }
-      await Future.delayed(const Duration(milliseconds: 100));
+    });
+
+    if (Supabase.instance.client.auth.currentSession != null) {
+      refreshUserData();
+      _subscribeToUserChanges(Supabase.instance.client.auth.currentUser!.id);
     }
   }
 
   Future<void> refreshUserData() async {
+    if (Supabase.instance.client.auth.currentSession == null) return;
+
     final data = await repository.getUserProfile();
     if (data != null) {
       user.value = data;

@@ -4,10 +4,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/search_page_controller.dart';
-import '../../../data/models/models.dart';
-import '../../../data/models/event_model.dart';
-import '../../../data/models/news_model.dart';
-import '../../../data/models/umkm_model.dart';
 import '../../../utils/shimmer_placeholder.dart';
 
 class SearchPageView extends GetView<SearchPageController> {
@@ -96,10 +92,10 @@ class SearchPageView extends GetView<SearchPageController> {
               child: TabBarView(
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _buildCulturesResultList(),
-                  _buildUmkmsResultList(),
-                  _buildEventsResultList(),
-                  _buildNewsResultList(),
+                  _buildCulturesResultList(context),
+                  _buildUmkmsResultList(context),
+                  _buildEventsResultList(context),
+                  _buildNewsResultList(context),
                 ],
               ),
             ),
@@ -220,9 +216,10 @@ class SearchPageView extends GetView<SearchPageController> {
     );
   }
 
-  Widget _buildShimmerList() {
+  Widget _buildShimmerList(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
     return ListView.builder(
-      padding: const EdgeInsets.all(10),
+      padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + safeBottom),
       itemCount: 5,
       itemBuilder: (context, index) {
         return Padding(
@@ -280,17 +277,18 @@ class SearchPageView extends GetView<SearchPageController> {
     );
   }
 
-  Widget _buildCulturesResultList() {
+  Widget _buildCulturesResultList(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
     return Obx(() {
       if (controller.isLoadingCultures.value) {
-        return _buildShimmerList();
+        return _buildShimmerList(context);
       }
 
       final list = controller.searchedCulturesList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + safeBottom),
         itemCount: list.length,
         itemBuilder: (context, index) {
           final item = list[index];
@@ -311,17 +309,18 @@ class SearchPageView extends GetView<SearchPageController> {
     });
   }
 
-  Widget _buildUmkmsResultList() {
+  Widget _buildUmkmsResultList(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
     return Obx(() {
       if (controller.isLoadingUmkms.value) {
-        return _buildShimmerList();
+        return _buildShimmerList(context);
       }
 
       final list = controller.searchedUmkmsList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + safeBottom),
         itemCount: list.length,
         itemBuilder: (context, index) {
           final item = list[index];
@@ -342,17 +341,18 @@ class SearchPageView extends GetView<SearchPageController> {
     });
   }
 
-  Widget _buildEventsResultList() {
+  Widget _buildEventsResultList(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
     return Obx(() {
       if (controller.isLoadingEvents.value) {
-        return _buildShimmerList();
+        return _buildShimmerList(context);
       }
 
       final list = controller.searchedEventsList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + safeBottom),
         itemCount: list.length,
         itemBuilder: (context, index) {
           final item = list[index];
@@ -373,17 +373,18 @@ class SearchPageView extends GetView<SearchPageController> {
     });
   }
 
-  Widget _buildNewsResultList() {
+  Widget _buildNewsResultList(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
     return Obx(() {
       if (controller.isLoadingNews.value) {
-        return _buildShimmerList();
+        return _buildShimmerList(context);
       }
 
       final list = controller.searchedNewsList;
       if (list.isEmpty) return _buildEmptyState();
 
       return ListView.builder(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.fromLTRB(10, 10, 10, 10 + safeBottom),
         itemCount: list.length,
         itemBuilder: (context, index) {
           final item = list[index];

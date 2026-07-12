@@ -6,7 +6,6 @@ import '../../../routes/app_pages.dart';
 import '../../../utils/icon_mapping.dart';
 import '../../../utils/image_viewer.dart';
 import '../controllers/detail_budaya_controller.dart';
-import '../../../data/models/review_model.dart';
 import '../../../utils/shimmer_placeholder.dart';
 import 'gallery_views.dart';
 
@@ -179,8 +178,12 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                                 _buildFacilitiesSection(),
                                 const SizedBox(height: 24),
                               ],
+                              _buildWordCloudSection(),
                               _buildReviewsSection(),
-                              const SizedBox(height: 100),
+                              SizedBox(
+                                height:
+                                    100 + MediaQuery.of(context).padding.bottom,
+                              ),
                             ],
                           ),
                         ),
@@ -196,6 +199,91 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
         );
       },
     );
+  }
+
+  Widget _buildWordCloudSection() {
+    return Obx(() {
+      if (controller.isWordCloudLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        );
+      }
+
+      if (controller.wordCloudData.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.cloud_queue_rounded, color: AppColors.accent),
+              SizedBox(width: 8),
+              Text(
+                "Kata Kunci Pengunjung",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Hasil analisis Big Data (Google Maps)",
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: controller.wordCloudData.map((item) {
+                final word = item['text'] as String;
+                final weight = item['value'] as int;
+                final double scaledFontSize =
+                    11.0 + (weight / 5).clamp(0.0, 10.0);
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.15),
+                    ),
+                  ),
+                  child: Text(
+                    word,
+                    style: TextStyle(
+                      fontSize: scaledFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      );
+    });
   }
 
   Widget _buildTopBar(BuildContext context) {
@@ -773,8 +861,9 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
   }
 
   Widget _buildBottomActionButtons(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
     return Positioned(
-      bottom: 20,
+      bottom: safeBottom > 0 ? safeBottom + 10 : 20,
       left: 20,
       right: 20,
       child: Row(
@@ -795,6 +884,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 ),
               ),
               style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 55),
                 side: const BorderSide(color: AppColors.accent, width: 2),
                 shape: RoundedRectangleBorder(
