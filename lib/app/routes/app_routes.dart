@@ -23,6 +23,7 @@ abstract class Routes {
   static const VERIFY_OTP = _Paths.VERIFY_OTP;
   static const UMKM_DETAIL = _Paths.UMKM_DETAIL;
   static const MAP_EXPLORE = _Paths.MAP_EXPLORE;
+  static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
   static const KUIS_BUDAYA = _Paths.KUIS_BUDAYA;
   static const PENCAPAIAN = _Paths.PENCAPAIAN;
   static const DETAIL_PENCAPAIAN = _Paths.DETAIL_PENCAPAIAN;
@@ -53,6 +54,7 @@ abstract class _Paths {
   static const VERIFY_OTP = '/verify-otp';
   static const UMKM_DETAIL = '/umkm-detail';
   static const MAP_EXPLORE = '/map-explore';
+  static const EDIT_PROFILE = '/edit-profile';
   static const KUIS_BUDAYA = '/kuis-budaya';
   static const PENCAPAIAN = '/pencapaian';
   static const DETAIL_PENCAPAIAN = '/detail-pencapaian';
