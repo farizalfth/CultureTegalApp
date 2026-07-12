@@ -2,8 +2,12 @@ import 'package:get/get.dart';
 
 import '../modules/ai_scan/bindings/ai_scan_binding.dart';
 import '../modules/ai_scan/views/ai_scan_view.dart';
+import '../modules/analitik/bindings/analitik_binding.dart';
+import '../modules/analitik/views/analitik_view.dart';
 import '../modules/detail_budaya/bindings/detail_budaya_binding.dart';
 import '../modules/detail_budaya/views/detail_budaya_view.dart';
+import '../modules/edit_profile/bindings/edit_profile_binding.dart';
+import '../modules/edit_profile/views/edit_profile_view.dart';
 import '../modules/event/bindings/detail_event_binding.dart';
 import '../modules/event/bindings/event_binding.dart';
 import '../modules/event/bindings/event_list_binding.dart';
@@ -12,6 +16,8 @@ import '../modules/event/views/event_list_view.dart';
 import '../modules/event/views/event_view.dart';
 import '../modules/explore/bindings/explore_binding.dart';
 import '../modules/explore/views/explore_view.dart';
+import '../modules/favorit/bindings/favorit_binding.dart';
+import '../modules/favorit/views/favorit_view.dart';
 import '../modules/forgot_password/bindings/forgot_password_binding.dart';
 import '../modules/forgot_password/views/forgot_password_view.dart';
 import '../modules/home/bindings/home_binding.dart';
@@ -26,6 +32,8 @@ import '../modules/news/bindings/news_detail_binding.dart';
 import '../modules/news/bindings/news_list_binding.dart';
 import '../modules/news/views/news_detail_view.dart';
 import '../modules/news/views/news_list_view.dart';
+import '../modules/notifikasi/bindings/notifikasi_binding.dart';
+import '../modules/notifikasi/views/notifikasi_view.dart';
 import '../modules/pencapaian/bindings/pencapaian_binding.dart';
 import '../modules/pencapaian/controllers/pencapaian_controller.dart';
 import '../modules/pencapaian/detail_pencapaian/bindings/detail_pencapaian_binding.dart';
@@ -37,6 +45,10 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/review/bindings/review_binding.dart';
 import '../modules/review/views/review_view.dart';
+import '../modules/riwayat_jelajah/bindings/riwayat_jelajah_binding.dart';
+import '../modules/riwayat_jelajah/views/riwayat_jelajah_view.dart';
+import '../modules/scan_history/bindings/scan_history_binding.dart';
+import '../modules/scan_history/views/scan_history_view.dart';
 import '../modules/search/bindings/search_page_binding.dart';
 import '../modules/search/views/search_page_view.dart';
 import '../modules/umkm/bindings/umkm_binding.dart';
@@ -47,8 +59,8 @@ import '../modules/update_password/bindings/update_password_binding.dart';
 import '../modules/update_password/views/update_password_view.dart';
 import '../modules/verify_otp/bindings/verify_otp_binding.dart';
 import '../modules/verify_otp/views/verify_otp_view.dart';
-import '../modules/edit_profile/bindings/edit_profile_binding.dart';
-import '../modules/edit_profile/views/edit_profile_view.dart';
+import '../modules/webview/bindings/webview_binding.dart';
+import '../modules/webview/views/webview_view.dart';
 
 part 'app_routes.dart';
 
@@ -203,6 +215,36 @@ class AppPages {
       name: _Paths.QUIZ,
       page: () => const QuizView(),
       binding: QuizBinding(),
+    ),
+    GetPage(
+      name: _Paths.RIWAYAT_JELAJAH,
+      page: () => const RiwayatJelajahView(),
+      binding: RiwayatJelajahBinding(),
+    ),
+    GetPage(
+      name: _Paths.SCAN_HISTORY,
+      page: () => const ScanHistoryView(),
+      binding: ScanHistoryBinding(),
+    ),
+    GetPage(
+      name: _Paths.FAVORIT,
+      page: () => const FavoritView(),
+      binding: FavoritBinding(),
+    ),
+    GetPage(
+      name: _Paths.NOTIFIKASI,
+      page: () => const NotifikasiView(),
+      binding: NotifikasiBinding(),
+    ),
+    GetPage(
+      name: _Paths.ANALITIK,
+      page: () => const AnalitikView(),
+      binding: AnalitikBinding(),
+    ),
+    GetPage(
+      name: _Paths.WEBVIEW,
+      page: () => const WebviewView(),
+      binding: WebviewBinding(),
     ),
   ];
 }

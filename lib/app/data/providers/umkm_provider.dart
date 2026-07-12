@@ -157,4 +157,25 @@ class UmkmProvider {
       throw e.toString();
     }
   }
+
+  Future<List<dynamic>> getWordCloud(String locationName) async {
+    try {
+      final String cleanBase = baseUrl.endsWith('/api/v1')
+          ? baseUrl
+          : '$baseUrl/api/v1';
+      final response = await http.get(
+        Uri.parse(
+          '$cleanBase/umkm/wordcloud/${Uri.encodeComponent(locationName)}',
+        ),
+        headers: {'Authorization': 'Bearer ${_authService.currentToken}'},
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+        return body['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

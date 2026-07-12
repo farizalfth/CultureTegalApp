@@ -10,20 +10,24 @@ class RegisterView extends GetView<RegisterController> {
   @override
   Widget build(BuildContext context) {
     final bool isShortScreen = context.height < 750;
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
           SafeArea(
+            bottom: false,
             child: SingleChildScrollView(
               physics: isShortScreen
                   ? const BouncingScrollPhysics()
-                  : const NeverScrollableScrollPhysics(),
+                  : const ClampingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.width * 0.07,
-                  vertical: isShortScreen ? 15 : 20,
+                padding: EdgeInsets.fromLTRB(
+                  context.width * 0.07,
+                  isShortScreen ? 15 : 20,
+                  context.width * 0.07,
+                  (isShortScreen ? 15 : 20) + safeBottom,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,13 +87,6 @@ class RegisterView extends GetView<RegisterController> {
                       "Email",
                       "Masukkan email aktif",
                       controller.emailController,
-                      isShortScreen,
-                    ),
-                    _buildInputField(
-                      Icons.phone_outlined,
-                      "Nomor Telepon",
-                      "Masukkan nomor telepon",
-                      controller.phoneController,
                       isShortScreen,
                     ),
                     Obx(

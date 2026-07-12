@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/app_colors.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/ai_scan_controller.dart';
+import '../../../utils/shimmer_placeholder.dart';
 
 class AiScanView extends GetView<AiScanController> {
   const AiScanView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final double safeBottom = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -30,7 +34,7 @@ class AiScanView extends GetView<AiScanController> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + safeBottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -128,11 +132,11 @@ class AiScanView extends GetView<AiScanController> {
                 return Container(
                   width: double.infinity,
                   height: 180,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(24)),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -220,12 +224,8 @@ class AiScanView extends GetView<AiScanController> {
                     if (food != null && food['video_url'] != null) ...[
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
-                        onPressed: () async {
-                          final uri = Uri.parse(food['video_url']);
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
-                          }
-                        },
+                        onPressed: () =>
+                            controller.launchVideo(food['video_url']),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red.shade700,
                           minimumSize: const Size(double.infinity, 50),
@@ -248,6 +248,29 @@ class AiScanView extends GetView<AiScanController> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Get.toNamed(Routes.KUIS_BUDAYA);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.quiz_rounded, color: Colors.white),
+                      label: const Text(
+                        "Kerjakan Kuis Terbuka",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -292,54 +315,87 @@ class AiScanView extends GetView<AiScanController> {
                 itemBuilder: (context, index) {
                   final item = controller.scanHistory[index];
                   final details = item['food_details'];
+                  final String name = details != null
+                      ? details['nama_makanan']
+                      : item['predicted_label'];
+                  final String date = item['created_at'] != null
+                      ? item['created_at'].toString().split('T')[0]
+                      : '';
+                  final String? img = item['image_url'];
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 20,
-                          backgroundColor: AppColors.background,
-                          child: Icon(
-                            Icons.fastfood_rounded,
-                            color: AppColors.accent,
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => _showScanDetails(context, item),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
                             children: [
-                              Text(
-                                details != null
-                                    ? details['nama_makanan']
-                                    : item['predicted_label'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: img != null
+                                    ? CachedNetworkImage(
+                                        imageUrl:
+                                            "http://${controller.baseUrl.replaceAll('http://', '').replaceAll('/api/v1', '')}$img",
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const ShimmerPlaceholder(
+                                              width: 40,
+                                              height: 40,
+                                              borderRadius: 12,
+                                            ),
+                                        errorWidget: (context, url, error) =>
+                                            _buildFallbackIcon(),
+                                      )
+                                    : _buildFallbackIcon(),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Dipindai pada: $date",
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Dipindai pada: ${item['created_at'] != null ? item['created_at'].toString().split('T')[0] : '-'}",
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 11,
-                                ),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.grey,
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.grey,
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },
@@ -348,6 +404,161 @@ class AiScanView extends GetView<AiScanController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFallbackIcon() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(
+        Icons.fastfood_rounded,
+        color: AppColors.accent,
+        size: 20,
+      ),
+    );
+  }
+
+  void _showScanDetails(BuildContext context, dynamic item) {
+    final details = item['food_details'];
+    final String name = details != null
+        ? details['nama_makanan']
+        : item['predicted_label'];
+    final String desc = details != null
+        ? details['deskripsi']
+        : 'Deskripsi tidak tersedia.';
+    final String? videoUrl = details != null ? details['video_url'] : null;
+    final String? img = item['image_url'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (img != null)
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: CachedNetworkImage(
+                      imageUrl:
+                          "http://${controller.baseUrl.replaceAll('http://', '').replaceAll('/api/v1', '')}$img",
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const ShimmerPlaceholder(
+                        width: double.infinity,
+                        height: 180,
+                        borderRadius: 16,
+                      ),
+                      errorWidget: (context, url, error) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              Text(
+                desc,
+                style: TextStyle(
+                  color: Colors.grey.shade800,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              if (videoUrl != null) ...[
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Get.back();
+                    controller.launchVideo(videoUrl);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    "Putar Video Resep Khas",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Get.back();
+                  Get.toNamed(Routes.KUIS_BUDAYA);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.quiz_rounded, color: Colors.white),
+                label: const Text(
+                  "Buka Kuis Pengetahuan",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

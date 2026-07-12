@@ -6,7 +6,6 @@ import 'package:latlong2/latlong.dart';
 import '../../../data/app_colors.dart';
 import '../controllers/detail_event_controller.dart';
 import '../../../utils/shimmer_placeholder.dart';
-import '../../../routes/app_pages.dart';
 
 class DetailEventView extends GetView<DetailEventController> {
   const DetailEventView({super.key});
@@ -345,7 +344,14 @@ class DetailEventView extends GetView<DetailEventController> {
         ],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          MediaQuery.of(context).padding.bottom > 0
+              ? MediaQuery.of(context).padding.bottom + 10
+              : 20,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [

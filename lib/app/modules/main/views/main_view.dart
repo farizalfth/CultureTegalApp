@@ -5,7 +5,7 @@ import '../../../data/app_colors.dart';
 import '../../event/views/event_view.dart';
 import '../../explore/views/explore_view.dart';
 import '../../home/views/home_view.dart';
-import '../../profile/view.dart';
+import '../../profile/views/profile_view.dart';
 import '../../umkm/views/umkm_view.dart';
 import '../controllers/controller.dart';
 import '../../../utils/shimmer_placeholder.dart';
