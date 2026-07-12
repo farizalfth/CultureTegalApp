@@ -176,6 +176,8 @@ class AppPages {
       name: _Paths.EDIT_PROFILE,
       page: () => const EditProfileView(),
       binding: EditProfileBinding(),
+    ),
+    GetPage(
       name: _Paths.PENCAPAIAN,
       page: () => const PencapaianView(),
       binding: PencapaianBinding(),

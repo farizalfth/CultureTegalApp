@@ -46,6 +46,13 @@ Struktur Direktori Proyek:
 │   │   │       ├── secure_storage_service.dart
 │   │   │       └── user_service.dart
 │   │   ├── modules
+│   │   │   ├── ai_scan
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── ai_scan_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── ai_scan_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── ai_scan_view.dart
 │   │   │   ├── detail_budaya
 │   │   │   │   ├── bindings
 │   │   │   │   │   └── detail_budaya_binding.dart
@@ -54,6 +61,13 @@ Struktur Direktori Proyek:
 │   │   │   │   └── views
 │   │   │   │       ├── detail_budaya_view.dart
 │   │   │   │       └── gallery_views.dart
+│   │   │   ├── edit_profile
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── edit_profile_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── edit_profile_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── edit_profile_view.dart
 │   │   │   ├── event
 │   │   │   │   ├── bindings
 │   │   │   │   │   ├── detail_event_binding.dart
@@ -119,8 +133,29 @@ Struktur Direktori Proyek:
 │   │   │   │   └── views
 │   │   │   │       ├── news_detail_view.dart
 │   │   │   │       └── news_list_view.dart
+│   │   │   ├── pencapaian
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── pencapaian_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── pencapaian_controller.dart
+│   │   │   │   ├── detail_pencapaian
+│   │   │   │   │   ├── bindings
+│   │   │   │   │   │   └── detail_pencapaian_binding.dart
+│   │   │   │   │   ├── controllers
+│   │   │   │   │   │   └── detail_pencapaian_controller.dart
+│   │   │   │   │   └── views
+│   │   │   │   │       └── detail_pencapaian_view.dart
+│   │   │   │   └── views
+│   │   │   │       └── pencapaian_view.dart
 │   │   │   ├── profile
 │   │   │   │   └── view.dart
+│   │   │   ├── quiz
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── quiz_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── quiz_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── quiz_view.dart
 │   │   │   ├── register
 │   │   │   │   ├── bindings
 │   │   │   │   │   └── register_binding.dart
@@ -181,7 +216,6 @@ Struktur Direktori Proyek:
 │   │       └── main_header.dart
 │   └── main.dart
 ├── project.py
-├── project_bundle.txt
 ├── pubspec.lock
 ├── pubspec.yaml
 ├── struktur_proyek.txt
