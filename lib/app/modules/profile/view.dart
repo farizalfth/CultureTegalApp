@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../data/app_colors.dart';
+import '../../routes/app_pages.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -29,6 +30,9 @@ class ProfileView extends StatelessWidget {
                     Icons.person_outline_rounded,
                     "Edit Profil",
                     "Ubah informasi akun kamu",
+                    onTap: () {
+                      Get.toNamed(Routes.EDIT_PROFILE);
+                    },
                   ),
                   _buildMenuItem(
                     Icons.location_on_outlined,
@@ -345,6 +349,7 @@ class ProfileView extends StatelessWidget {
     String? trailingText,
     bool isSwitch = false,
     bool isLogout = false,
+    VoidCallback? onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -353,6 +358,7 @@ class ProfileView extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
       ),
       child: ListTile(
+        onTap: onTap,
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(

@@ -38,6 +38,8 @@ import '../modules/update_password/bindings/update_password_binding.dart';
 import '../modules/update_password/views/update_password_view.dart';
 import '../modules/verify_otp/bindings/verify_otp_binding.dart';
 import '../modules/verify_otp/views/verify_otp_view.dart';
+import '../modules/edit_profile/bindings/edit_profile_binding.dart';
+import '../modules/edit_profile/views/edit_profile_view.dart';
 
 part 'app_routes.dart';
 
@@ -160,6 +162,11 @@ class AppPages {
       name: _Paths.MAP_EXPLORE,
       page: () => const MapExploreView(),
       binding: MapExploreBinding(),
+    ),
+    GetPage(
+      name: _Paths.EDIT_PROFILE,
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
     ),
   ];
 }
