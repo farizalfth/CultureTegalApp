@@ -1,8 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../../data/models/culture_model.dart';
 import '../../../data/models/event_model.dart';
@@ -11,6 +17,7 @@ import '../../../data/models/map_item_model.dart';
 import '../../../data/providers/culture_provider.dart';
 import '../../../data/providers/event_provider.dart';
 import '../../../data/providers/umkm_provider.dart';
+import '../../../data/service/auth_service.dart';
 
 class MapExploreController extends GetxController
     with GetSingleTickerProviderStateMixin {
@@ -20,6 +27,8 @@ class MapExploreController extends GetxController
   final CultureProvider _cultureProvider = Get.find<CultureProvider>();
   final EventProvider _eventProvider = Get.find<EventProvider>();
   final UmkmProvider _umkmProvider = Get.find<UmkmProvider>();
+  final AuthService _authService = Get.find<AuthService>();
+  final String baseUrl = dotenv.env['FLASK_API_URL'] ?? '';
 
   final RxBool isLoading = false.obs;
   final RxString searchQuery = "".obs;
@@ -29,6 +38,17 @@ class MapExploreController extends GetxController
   final List<MapItem> allMapItems = <MapItem>[];
   final RxList<MapItem> filteredMapItems = <MapItem>[].obs;
 
+  final RxDouble currentZoom = 13.5.obs;
+  final RxBool isWordCloudLoading = false.obs;
+  final RxList<Map<String, dynamic>> wordCloudData =
+      <Map<String, dynamic>>[].obs;
+
+  final Rxn<LatLng> userLocation = Rxn<LatLng>();
+  final RxBool isNearSite = false.obs;
+  final Rxn<MapItem> nearSiteItem = Rxn<MapItem>();
+  final RxBool isClaimingGeofence = false.obs;
+
+  Timer? _searchDebounce;
   AnimationController? _animationController;
 
   @override
@@ -43,6 +63,7 @@ class MapExploreController extends GetxController
 
   @override
   void onClose() {
+    _searchDebounce?.cancel();
     _animationController?.dispose();
     searchController.dispose();
     mapController.dispose();
@@ -53,6 +74,8 @@ class MapExploreController extends GetxController
     try {
       isLoading.value = true;
       allMapItems.clear();
+
+      await _authService.waitForSession();
 
       final results = await Future.wait([
         _cultureProvider.getCultures(),
@@ -173,7 +196,27 @@ class MapExploreController extends GetxController
 
   void onSearchChanged(String val) {
     searchQuery.value = val;
-    applyFilters();
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      applyFilters();
+      if (filteredMapItems.isNotEmpty && val.trim().length > 2) {
+        final matchedItem = filteredMapItems.first;
+        selectItem(matchedItem);
+      } else if (val.trim().isEmpty) {
+        selectedItem.value = null;
+      }
+    });
+  }
+
+  void updateZoom(double zoom) {
+    currentZoom.value = zoom;
+  }
+
+  double getMarkerSize(MapItem item) {
+    double baseSize = 38.0;
+    double scale = currentZoom.value / 13.5;
+    return (baseSize * scale).clamp(26.0, 60.0);
   }
 
   void animateToLocation(LatLng target, double destZoom) {
@@ -209,6 +252,247 @@ class MapExploreController extends GetxController
   void selectItem(MapItem item) {
     selectedItem.value = item;
     animateToLocation(item.coordinate, 15.5);
+    fetchWordCloud(item.title);
+  }
+
+  Future<void> fetchWordCloud(String locationName) async {
+    isWordCloudLoading.value = true;
+    wordCloudData.clear();
+    try {
+      final responseData = await _cultureProvider.getWordCloud(locationName);
+      if (responseData.isNotEmpty) {
+        wordCloudData.assignAll(List<Map<String, dynamic>>.from(responseData));
+      } else {
+        wordCloudData.assignAll(_getMockWordCloud(locationName));
+      }
+    } catch (e) {
+      wordCloudData.assignAll(_getMockWordCloud(locationName));
+    } finally {
+      isWordCloudLoading.value = false;
+    }
+  }
+
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const r = 6371000.0;
+    final phi1 = lat1 * math.pi / 180.0;
+    final phi2 = lat2 * math.pi / 180.0;
+    final deltaPhi = (lat2 - lat1) * math.pi / 180.0;
+    final deltaLambda = (lon2 - lon1) * math.pi / 180.0;
+    final a =
+        math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) +
+        math.cos(phi1) *
+            math.cos(phi2) *
+            math.sin(deltaLambda / 2) *
+            math.sin(deltaLambda / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return r * c;
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  void getLiveUserLocation() async {
+    try {
+      Position position = await _determinePosition();
+      userLocation.value = LatLng(position.latitude, position.longitude);
+      animateToLocation(userLocation.value!, 16.0);
+      checkGeofenceBoundary(userLocation.value!);
+    } catch (err) {
+      Get.snackbar(
+        "GPS Tidak Aktif",
+        "Gagal mendapatkan koordinat lokasi GPS fisik rill kamu.",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void checkGeofenceBoundary(LatLng userPos) {
+    isNearSite.value = false;
+    nearSiteItem.value = null;
+
+    for (var item in allMapItems) {
+      double distance = calculateDistance(
+        userPos.latitude,
+        userPos.longitude,
+        item.coordinate.latitude,
+        item.coordinate.longitude,
+      );
+      if (distance <= 100.0) {
+        isNearSite.value = true;
+        nearSiteItem.value = item;
+        break;
+      }
+    }
+  }
+
+  Future<void> claimGeofencePoints(String siteId) async {
+    try {
+      isClaimingGeofence.value = true;
+      final String cleanBase = baseUrl.endsWith('/api/v1')
+          ? baseUrl
+          : '$baseUrl/api/v1';
+      final response = await http.post(
+        Uri.parse('$cleanBase/scans/geofence'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authService.currentToken}',
+        },
+        body: jsonEncode({
+          'site_id': siteId,
+          'latitude': userLocation.value?.latitude ?? 0.0,
+          'longitude': userLocation.value?.longitude ?? 0.0,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        isNearSite.value = false;
+        nearSiteItem.value = null;
+        Get.snackbar(
+          "Verifikasi Berhasil!",
+          "Kamu berhasil memverifikasi kunjungan dan mendapatkan 100 Poin!",
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+      } else {
+        Get.snackbar(
+          "Gagal Verifikasi",
+          "Kamu sudah memverifikasi kunjungan di tempat ini sebelumnya.",
+          backgroundColor: Colors.orange.shade700,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Koneksi Gagal",
+        "Gagal menghubungi server verifikasi.",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isClaimingGeofence.value = false;
+    }
+  }
+
+  List<Map<String, dynamic>> _getMockWordCloud(String name) {
+    final cleanName = name.toLowerCase();
+    if (cleanName.contains("masjid") || cleanName.contains("mosque")) {
+      return [
+        {"text": "damai", "value": 45},
+        {"text": "sejarah", "value": 38},
+        {"text": "megah", "value": 30},
+        {"text": "bersih", "value": 26},
+        {"text": "alun-alun", "value": 22},
+        {"text": "sejuk", "value": 18},
+        {"text": "sholat", "value": 15},
+        {"text": "tenang", "value": 14},
+        {"text": "arsitektur", "value": 12},
+        {"text": "heritage", "value": 11},
+      ];
+    } else if (cleanName.contains("klenteng") || cleanName.contains("kiong")) {
+      return [
+        {"text": "toleransi", "value": 48},
+        {"text": "indah", "value": 42},
+        {"text": "budaya", "value": 35},
+        {"text": "klenteng", "value": 28},
+        {"text": "sejarah", "value": 24},
+        {"text": "warna-warni", "value": 18},
+        {"text": "klasik", "value": 15},
+        {"text": "ibadah", "value": 14},
+        {"text": "harmonis", "value": 13},
+        {"text": "akulturasi", "value": 12},
+      ];
+    } else if (cleanName.contains("pantai") || cleanName.contains("alam")) {
+      return [
+        {"text": "sunset", "value": 52},
+        {"text": "pantai", "value": 45},
+        {"text": "ramai", "value": 32},
+        {"text": "keluarga", "value": 28},
+        {"text": "kuliner", "value": 24},
+        {"text": "bermain", "value": 18},
+        {"text": "ombak", "value": 15},
+        {"text": "segar", "value": 14},
+        {"text": "wisata", "value": 12},
+        {"text": "pasir", "value": 11},
+      ];
+    } else if (cleanName.contains("tahu") || cleanName.contains("aci")) {
+      return [
+        {"text": "gurih", "value": 48},
+        {"text": "enak", "value": 40},
+        {"text": "renyah", "value": 35},
+        {"text": "oleh-oleh", "value": 30},
+        {"text": "aci", "value": 26},
+        {"text": "panas", "value": 20},
+        {"text": "cocolan", "value": 16},
+        {"text": "nagih", "value": 15},
+        {"text": "teh_poci", "value": 14},
+        {"text": "murah", "value": 12},
+      ];
+    } else if (cleanName.contains("birao") || cleanName.contains("scs")) {
+      return [
+        {"text": "belanda", "value": 45},
+        {"text": "sejarah", "value": 40},
+        {"text": "kolonial", "value": 34},
+        {"text": "megah", "value": 28},
+        {"text": "arsitektur", "value": 25},
+        {"text": "foto", "value": 20},
+        {"text": "landmark", "value": 16},
+        {"text": "kuno", "value": 15},
+        {"text": "klasik", "value": 14},
+        {"text": "kereta", "value": 12},
+      ];
+    }
+    return [
+      {"text": "menarik", "value": 28},
+      {"text": "budaya", "value": 22},
+      {"text": "lokal", "value": 18},
+      {"text": "tegal", "value": 15},
+      {"text": "wisata", "value": 12},
+      {"text": "sejarah", "value": 10},
+    ];
+  }
+
+  Future<void> openInGoogleMaps(double lat, double lng) async {
+    final String coords = "$lat,$lng";
+    final iosAppUrl = Uri.parse("comgooglemaps://?q=$coords");
+    final androidAppUrl = Uri.parse("google.navigation:q=$coords");
+    final webUrl = Uri.parse(
+      "https://www.google.com/maps/search/?api=1&query=$coords",
+    );
+
+    try {
+      if (await canLaunchUrl(iosAppUrl)) {
+        await launchUrl(iosAppUrl);
+      } else if (await canLaunchUrl(androidAppUrl)) {
+        await launchUrl(androidAppUrl);
+      } else {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      Get.snackbar("Kesalahan", "Gagal membuka peta: $e");
+    }
   }
 
   void _handleIncomingArguments() {

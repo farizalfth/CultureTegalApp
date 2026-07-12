@@ -300,7 +300,7 @@ class MainWrapper extends GetView<MainController> {
             icon: Icons.quiz_rounded,
             label: "Kuis",
             isOpen: isOpen,
-            onTap: () => Get.toNamed('/kuis-budaya'),
+            onTap: () => controller.goToQuiz(),
           ),
           _buildCustomFab(
             right: isOpen
@@ -371,58 +371,61 @@ class MainWrapper extends GetView<MainController> {
       curve: Curves.easeOutQuart,
       right: right,
       bottom: bottom,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 250),
-        opacity: isOpen ? 1 : 0,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isOpen)
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 5,
+      child: IgnorePointer(
+        ignoring: !isOpen,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 250),
+          opacity: isOpen ? 1 : 0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isOpen)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
                     ),
-                  ],
-                ),
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
                   ),
                 ),
-              ),
-            GestureDetector(
-              onTap: isOpen ? onTap : null,
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accent.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+              GestureDetector(
+                onTap: isOpen ? onTap : null,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 28),
                 ),
-                child: Icon(icon, color: Colors.white, size: 28),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

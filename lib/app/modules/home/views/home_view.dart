@@ -131,7 +131,11 @@ class HomeView extends GetView<HomeController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _quickActionItem("Smart\nCulture", Icons.auto_awesome_rounded, () {}),
+        _quickActionItem(
+          "Smart\nCulture",
+          Icons.auto_awesome_rounded,
+          () => Get.toNamed(Routes.AI_SCAN),
+        ),
         _quickActionItem(
           "Jelajah\nBudaya",
           Icons.explore_rounded,
@@ -145,7 +149,7 @@ class HomeView extends GetView<HomeController> {
         _quickActionItem(
           "Kuis\nBudaya",
           Icons.quiz_rounded,
-          () => Get.toNamed('/kuis-budaya'),
+          () => Get.toNamed(Routes.KUIS_BUDAYA),
         ),
       ],
     );
@@ -223,7 +227,7 @@ class HomeView extends GetView<HomeController> {
             ),
             const SizedBox(height: 18),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () => Get.toNamed(Routes.PENCAPAIAN),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
