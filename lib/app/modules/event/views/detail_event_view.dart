@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../data/app_colors.dart';
 import '../controllers/detail_event_controller.dart';
 import '../../../utils/shimmer_placeholder.dart';
+import '../../../routes/app_pages.dart';
 
 class DetailEventView extends GetView<DetailEventController> {
   const DetailEventView({super.key});
@@ -231,19 +234,52 @@ class DetailEventView extends GetView<DetailEventController> {
                   child: Column(
                     children: [
                       Container(
-                        height: 130,
+                        height: 150,
                         width: double.infinity,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFE8F1F2),
                           borderRadius: BorderRadius.vertical(
                             top: Radius.circular(20),
                           ),
                         ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.map_outlined,
-                            size: 50,
-                            color: Colors.black12,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          child: FlutterMap(
+                            options: MapOptions(
+                              initialCenter: LatLng(
+                                event.latitude,
+                                event.longitude,
+                              ),
+                              initialZoom: 15.0,
+                              interactionOptions: const InteractionOptions(
+                                flags: InteractiveFlag.all,
+                              ),
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                                subdomains: const ['a', 'b', 'c', 'd'],
+                              ),
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: LatLng(
+                                      event.latitude,
+                                      event.longitude,
+                                    ),
+                                    width: 35,
+                                    height: 35,
+                                    child: const Icon(
+                                      Icons.location_on_rounded,
+                                      color: Colors.red,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -277,7 +313,8 @@ class DetailEventView extends GetView<DetailEventController> {
                             ),
                             const SizedBox(width: 15),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () =>
+                                  controller.openGoogleMapsRouting(),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFD06A33),
                                 elevation: 0,

@@ -14,7 +14,7 @@ class ForgotPasswordController extends GetxController {
     super.onClose();
   }
 
-  Future<void> sendResetLink() async {
+  Future<void> sendResetOtp() async {
     final email = emailController.text.trim();
 
     if (email.isEmpty || !email.contains('@')) {
@@ -33,14 +33,17 @@ class ForgotPasswordController extends GetxController {
     try {
       isLoading.value = true;
 
-      await _authService.sendPasswordResetEmail(email);
+      await _authService.sendPasswordResetOtp(email);
 
-      Get.back();
+      Get.toNamed(
+        '/verify-otp',
+        arguments: {'email': email, 'isRecovery': true},
+      );
 
       Future.delayed(const Duration(milliseconds: 300), () {
         Get.snackbar(
-          'Email Terkirim',
-          'Tautan pemulihan telah dikirim ke kotak masuk atau folder spam Anda.',
+          'OTP Terkirim',
+          'Kode OTP pemulihan sandi telah dikirim ke kotak masuk email Anda.',
           backgroundColor: Colors.green.shade600,
           colorText: Colors.white,
           duration: const Duration(seconds: 5),
@@ -48,7 +51,6 @@ class ForgotPasswordController extends GetxController {
           margin: const EdgeInsets.all(16),
         );
       });
-
     } catch (e) {
       Get.snackbar(
         'Gagal',

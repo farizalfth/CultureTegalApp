@@ -17,7 +17,17 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
   Widget build(BuildContext context) {
     return GetBuilder<DetailBudayaController>(
       builder: (controller) {
-        final culture = controller.culture;
+        if (controller.isLoadingSiteDetails.value ||
+            controller.culture == null) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+
+        final culture = controller.culture!;
         final List<String> displayGallery = culture.gallery.isEmpty
             ? [culture.image]
             : culture.gallery;
@@ -160,7 +170,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                               _buildDescriptionSection(),
                               const SizedBox(height: 24),
                               if (culture.gallery.isNotEmpty) ...[
-                                _buildGallerySection(),
+                                _buildPageGallerySection(),
                                 const SizedBox(height: 24),
                               ],
                               _buildFunFactSection(),
@@ -180,7 +190,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 ),
               ),
               _buildTopBar(context),
-              _buildBottomActionButtons(),
+              _buildBottomActionButtons(context),
             ],
           ),
         );
@@ -227,12 +237,15 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 ),
               ),
               const SizedBox(width: 12),
-              CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(
-                  Icons.share_outlined,
-                  color: Colors.grey.shade800,
-                  size: 20,
+              GestureDetector(
+                onTap: () => controller.shareCultureSite(),
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.share_outlined,
+                    color: Colors.grey.shade800,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -243,7 +256,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
   }
 
   Widget _buildInfoBar() {
-    final culture = controller.culture;
+    final culture = controller.culture!;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
@@ -262,7 +275,34 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
           _verticalDivider(),
           _infoItem(Icons.location_on_rounded, "Lokasi", culture.subLocation),
           _verticalDivider(),
-          _infoItem(Icons.explore_rounded, "Jarak", culture.distance),
+          Obx(() {
+            final double? distance = controller.dynamicDistance.value;
+            final bool isCalculating = controller.isCalculatingDistance.value;
+            final String distanceStr = distance != null
+                ? "${distance.toStringAsFixed(1)} km"
+                : culture.distance;
+            return isCalculating
+                ? const SizedBox(
+                    width: 45,
+                    height: 45,
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                    ),
+                  )
+                : _infoItemWithAction(
+                    Icons.explore_rounded,
+                    "Jarak",
+                    distanceStr,
+                    onActionTap: () => controller.recalculateDistance(),
+                  );
+          }),
           _verticalDivider(),
           _infoItem(
             Icons.access_time_filled_rounded,
@@ -296,12 +336,52 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
     );
   }
 
+  Widget _infoItemWithAction(
+    IconData icon,
+    String title,
+    String value, {
+    required VoidCallback onActionTap,
+  }) {
+    return GestureDetector(
+      onTap: onActionTap,
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon, color: AppColors.accent, size: 20),
+              const Positioned(
+                top: -3,
+                right: -8,
+                child: Icon(Icons.sync, color: AppColors.primary, size: 10),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.grey.shade800,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _verticalDivider() {
     return Container(height: 30, width: 1, color: Colors.grey.shade200);
   }
 
   Widget _buildDescriptionSection() {
-    final description = controller.culture.description;
+    final description = controller.culture!.description;
     final bool canExpand = description.length > 150;
 
     return Column(
@@ -354,8 +434,8 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
     );
   }
 
-  Widget _buildGallerySection() {
-    final gallery = controller.culture.gallery;
+  Widget _buildPageGallerySection() {
+    final gallery = controller.culture!.gallery;
     final limitedGallery = gallery.take(4).toList();
 
     return Column(
@@ -465,7 +545,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  controller.culture.funFact,
+                  controller.culture!.funFact,
                   style: const TextStyle(
                     color: Color(0xFF7B3F00),
                     fontSize: 12,
@@ -481,7 +561,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
   }
 
   Widget _buildFacilitiesSection() {
-    final facilities = controller.culture.facilities;
+    final facilities = controller.culture!.facilities;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -532,7 +612,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
   }
 
   Widget _buildReviewsSection() {
-    final list = controller.culture.reviews;
+    final list = controller.culture!.reviews;
     if (list.isEmpty) return const SizedBox.shrink();
 
     final limitedReviews = list.take(3).toList();
@@ -692,7 +772,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
     );
   }
 
-  Widget _buildBottomActionButtons() {
+  Widget _buildBottomActionButtons(BuildContext context) {
     return Positioned(
       bottom: 20,
       left: 20,
@@ -702,7 +782,7 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
           Expanded(
             flex: 1,
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () => controller.openNavigationChoice(context),
               icon: const Icon(
                 Icons.navigation_outlined,
                 color: AppColors.accent,
@@ -726,25 +806,38 @@ class DetailBudayaView extends GetView<DetailBudayaController> {
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.explore_outlined, color: Colors.white),
-              label: const Text(
-                "Jelajahi Sekarang",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            child: Obx(() {
+              return ElevatedButton.icon(
+                onPressed: controller.isClaimingGeofence.value
+                    ? null
+                    : () => controller.claimGeofenceVisit(),
+                icon: controller.isClaimingGeofence.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.explore_outlined, color: Colors.white),
+                label: const Text(
+                  "Jelajah Sekarang",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                minimumSize: const Size(double.infinity, 55),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  minimumSize: const Size(double.infinity, 55),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ],
       ),

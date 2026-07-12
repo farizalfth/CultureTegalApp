@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../data/models/umkm_model.dart';
 import '../../../data/providers/umkm_provider.dart';
 import '../../../data/service/auth_service.dart';
@@ -13,30 +13,11 @@ class UmkmController extends GetxController {
 
   final RxList<UmkmModel> allProducts = <UmkmModel>[].obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    _initializeData();
-  }
-
-  Future<void> _initializeData() async {
-    await _waitForAuth();
-    fetchProducts();
-  }
-
-  Future<void> _waitForAuth() async {
-    final authService = Get.find<AuthService>();
-    for (int i = 0; i < 15; i++) {
-      if (authService.currentToken != null) {
-        break;
-      }
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-  }
-
   Future<void> fetchProducts() async {
     isLoading.value = true;
     try {
+      await Get.find<AuthService>().waitForSession();
+
       final response = await _umkmProvider.getUmkms(page: 1, perPage: 20);
       final List<dynamic> items = response['data']?['items'] ?? [];
 
@@ -45,7 +26,7 @@ class UmkmController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Gagal Memuat Produk',
-        e.toString(),
+        e.toString().replaceAll("Exception: ", ""),
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../data/models/culture_model.dart';
 import '../../../data/providers/culture_provider.dart';
 import '../../../data/service/auth_service.dart';
@@ -8,6 +11,8 @@ import '../../../data/service/auth_service.dart';
 class ExploreController extends GetxController {
   final CultureProvider _cultureProvider = Get.find<CultureProvider>();
   final PageController pageController = PageController();
+  final AuthService _authService = Get.find<AuthService>();
+  final String baseUrl = dotenv.env['FLASK_API_URL'] ?? '';
 
   var currentSliderIndex = 0.obs;
   var selectedCategoryIndex = 0.obs;
@@ -17,6 +22,7 @@ class ExploreController extends GetxController {
 
   var allData = <CultureModel>[].obs;
   var activeSliderItems = <CultureModel>[].obs;
+  final RxSet<String> favoritedSiteIds = <String>{}.obs;
 
   Timer? _timer;
 
@@ -47,16 +53,62 @@ class ExploreController extends GetxController {
       hasError.value = false;
       errorMessage.value = "";
 
+      await _authService.waitForSession();
+
       final List<CultureModel> fetchedData = await _cultureProvider
           .getCultures();
       allData.assignAll(fetchedData);
       _updateSliderItems();
+      await loadFavoriteSites();
     } catch (e) {
       hasError.value = true;
       errorMessage.value = e.toString().replaceAll("Exception: ", "");
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> loadFavoriteSites() async {
+    try {
+      final String cleanBase = baseUrl.endsWith('/api/v1')
+          ? baseUrl
+          : '$baseUrl/api/v1';
+      final response = await http.get(
+        Uri.parse('$cleanBase/users/favorites'),
+        headers: {'Authorization': 'Bearer ${_authService.currentToken}'},
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+        final List<dynamic> cultures = body['data']?['cultures'] ?? [];
+        favoritedSiteIds.assignAll(
+          cultures.map((c) => c['id'].toString()).toSet(),
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> toggleFavorite(String siteId) async {
+    try {
+      final String cleanBase = baseUrl.endsWith('/api/v1')
+          ? baseUrl
+          : '$baseUrl/api/v1';
+      final response = await http.post(
+        Uri.parse('$cleanBase/users/favorites/toggle'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${_authService.currentToken}',
+        },
+        body: json.encode({'target_type': 'culture', 'target_id': siteId}),
+      );
+
+      if (response.statusCode == 200) {
+        if (favoritedSiteIds.contains(siteId)) {
+          favoritedSiteIds.remove(siteId);
+        } else {
+          favoritedSiteIds.add(siteId);
+        }
+      }
+    } catch (_) {}
   }
 
   void _updateSliderItems() {

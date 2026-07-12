@@ -22,11 +22,22 @@ class EventListController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    if (Get.arguments != null) {
-      selectedCategoryIndex.value = Get.arguments as int;
-    }
+    _handleIncomingArguments();
     scrollController.addListener(_scrollListener);
     fetchInitialEvents();
+  }
+
+  void _handleIncomingArguments() {
+    final dynamic args = Get.arguments;
+    if (args != null) {
+      if (args is int) {
+        selectedCategoryIndex.value = args;
+      } else if (args is Map<String, dynamic>) {
+        selectedCategoryIndex.value = args['category'] ?? 0;
+        selectedStatus.value = args['status'] ?? "Semua";
+        isFilterExpanded.value = args['expandFilter'] ?? false;
+      }
+    }
   }
 
   void _scrollListener() {

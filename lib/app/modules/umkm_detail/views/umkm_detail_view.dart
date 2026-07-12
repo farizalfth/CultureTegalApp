@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/app_colors.dart';
 import '../controllers/umkm_detail_controller.dart';
+import '../../../routes/app_pages.dart';
 
 class UmkmDetailView extends GetView<UmkmDetailController> {
   const UmkmDetailView({super.key});
@@ -19,18 +20,40 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: context.height * 0.4,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(product.image),
-                      fit: BoxFit.cover,
+                Stack(
+                  children: [
+                    Container(
+                      height: context.height * 0.42,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(product.image),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                  ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 80,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [Colors.white, Colors.transparent],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -44,7 +67,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               product.category,
@@ -60,14 +83,14 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                               const Icon(
                                 Icons.star_rounded,
                                 color: Colors.amber,
-                                size: 20,
+                                size: 22,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 product.rating.toString(),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 15,
                                 ),
                               ),
                             ],
@@ -78,26 +101,30 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                       Text(
                         product.name,
                         style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
                           color: Colors.black87,
+                          height: 1.3,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         product.price,
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.accent,
                         ),
                       ),
                       const SizedBox(height: 24),
+                      const Divider(),
+                      const SizedBox(height: 16),
                       const Text(
                         "Deskripsi Produk",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -105,26 +132,33 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                         product.description ??
                             "Tidak ada deskripsi untuk produk ini.",
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade700,
                           fontSize: 14,
                           height: 1.6,
                         ),
                       ),
                       const SizedBox(height: 24),
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey.shade100),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.storefront_rounded,
-                              color: AppColors.primary,
-                              size: 28,
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.storefront_rounded,
+                                color: AppColors.primary,
+                                size: 24,
+                              ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -136,15 +170,16 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15,
+                                      color: Colors.black87,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 4),
                                   Text(
                                     product.storeAddress ??
                                         "Alamat toko tidak dicantumkan.",
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
-                                      fontSize: 13,
+                                      fontSize: 12,
                                       height: 1.4,
                                     ),
                                   ),
@@ -153,14 +188,20 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                             ),
                             if (product.latitude != null &&
                                 product.longitude != null)
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.directions_outlined,
-                                  color: Colors.blue,
-                                  size: 28,
+                              GestureDetector(
+                                onTap: () => controller.launchMaps(),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.directions_outlined,
+                                    color: Colors.blue.shade700,
+                                    size: 24,
+                                  ),
                                 ),
-                                onPressed: () => controller.launchMaps(),
-                                tooltip: "Petunjuk Arah",
                               ),
                           ],
                         ),
@@ -174,6 +215,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
                           TextButton(
@@ -334,8 +376,13 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
             left: 20,
             child: CircleAvatar(
               backgroundColor: Colors.white.withOpacity(0.9),
+              radius: 24,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.black87,
+                  size: 18,
+                ),
                 onPressed: () => Get.back(),
               ),
             ),
@@ -357,7 +404,12 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                           Icons.map_outlined,
                           color: Colors.blue,
                         ),
-                        onPressed: () => controller.launchMaps(),
+                        onPressed: () {
+                          Get.toNamed(
+                            Routes.MAP_EXPLORE,
+                            arguments: {'targetId': product.id},
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -387,6 +439,7 @@ class UmkmDetailView extends GetView<UmkmDetailController> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
+                      minimumSize: const Size(double.infinity, 52),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,

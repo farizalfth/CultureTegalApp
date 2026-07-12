@@ -1,0 +1,189 @@
+Struktur Direktori Proyek:
+.
+├── .flutter-plugins-dependencies
+├── .gitignore
+├── .metadata
+├── README.md
+├── analysis_options.yaml
+├── assets
+│   └── images
+│       ├── beranda
+│       │   └── cover_atas.png
+│       ├── jelajah
+│       │   └── cover_info_badge.png
+│       ├── login
+│       │   ├── cover_login.png
+│       │   └── google_icon.png
+│       └── register
+│           └── register_icon.png
+├── lib
+│   ├── app
+│   │   ├── bindings
+│   │   │   └── initial_binding.dart
+│   │   ├── data
+│   │   │   ├── app_colors.dart
+│   │   │   ├── app_config.dart
+│   │   │   ├── models
+│   │   │   │   ├── culture_model.dart
+│   │   │   │   ├── event_model.dart
+│   │   │   │   ├── facility_model.dart
+│   │   │   │   ├── map_item_model.dart
+│   │   │   │   ├── models.dart
+│   │   │   │   ├── news_model.dart
+│   │   │   │   ├── review_model.dart
+│   │   │   │   ├── umkm_model.dart
+│   │   │   │   └── user_model.dart
+│   │   │   ├── providers
+│   │   │   │   ├── culture_provider.dart
+│   │   │   │   ├── event_provider.dart
+│   │   │   │   ├── news_provider.dart
+│   │   │   │   ├── umkm_provider.dart
+│   │   │   │   └── user_provider.dart
+│   │   │   ├── repositories
+│   │   │   │   └── user_repository.dart
+│   │   │   └── service
+│   │   │       ├── auth_service.dart
+│   │   │       ├── secure_storage_service.dart
+│   │   │       └── user_service.dart
+│   │   ├── modules
+│   │   │   ├── detail_budaya
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── detail_budaya_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── detail_budaya_controller.dart
+│   │   │   │   └── views
+│   │   │   │       ├── detail_budaya_view.dart
+│   │   │   │       └── gallery_views.dart
+│   │   │   ├── event
+│   │   │   │   ├── bindings
+│   │   │   │   │   ├── detail_event_binding.dart
+│   │   │   │   │   ├── event_binding.dart
+│   │   │   │   │   └── event_list_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   ├── detail_event_controller.dart
+│   │   │   │   │   ├── event_controller.dart
+│   │   │   │   │   └── event_list_controller.dart
+│   │   │   │   └── views
+│   │   │   │       ├── detail_event_view.dart
+│   │   │   │       ├── event_list_view.dart
+│   │   │   │       └── event_view.dart
+│   │   │   ├── explore
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── explore_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── explore_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── explore_view.dart
+│   │   │   ├── forgot_password
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── forgot_password_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── forgot_password_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── forgot_password_view.dart
+│   │   │   ├── home
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── home_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── home_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── home_view.dart
+│   │   │   ├── login
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── login_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── login_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── login_view.dart
+│   │   │   ├── main
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── main_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── main_view.dart
+│   │   │   ├── map_explore
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── map_explore_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── map_explore_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── map_explore_view.dart
+│   │   │   ├── news
+│   │   │   │   ├── bindings
+│   │   │   │   │   ├── news_detail_binding.dart
+│   │   │   │   │   └── news_list_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   ├── news_detail_controller.dart
+│   │   │   │   │   └── news_list_controller.dart
+│   │   │   │   └── views
+│   │   │   │       ├── news_detail_view.dart
+│   │   │   │       └── news_list_view.dart
+│   │   │   ├── profile
+│   │   │   │   └── view.dart
+│   │   │   ├── register
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── register_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── register_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── register_view.dart
+│   │   │   ├── review
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── review_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── review_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── review_view.dart
+│   │   │   ├── search
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── search_page_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── search_page_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── search_page_view.dart
+│   │   │   ├── umkm
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── umkm_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── umkm_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── umkm_view.dart
+│   │   │   ├── umkm_detail
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── umkm_detail_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── umkm_detail_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── umkm_detail_view.dart
+│   │   │   ├── update_password
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── update_password_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── update_password_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── update_password_view.dart
+│   │   │   └── verify_otp
+│   │   │       ├── bindings
+│   │   │       │   └── verify_otp_binding.dart
+│   │   │       ├── controllers
+│   │   │       │   └── verify_otp_controller.dart
+│   │   │       └── views
+│   │   │           └── verify_otp_view.dart
+│   │   ├── routes
+│   │   │   ├── app_pages.dart
+│   │   │   └── app_routes.dart
+│   │   ├── utils
+│   │   │   ├── icon_mapping.dart
+│   │   │   ├── image_viewer.dart
+│   │   │   └── shimmer_placeholder.dart
+│   │   └── widgets
+│   │       └── main_header.dart
+│   └── main.dart
+├── project.py
+├── project_bundle.txt
+├── pubspec.lock
+├── pubspec.yaml
+├── struktur_proyek.txt
+└── test
+    └── widget_test.dart
