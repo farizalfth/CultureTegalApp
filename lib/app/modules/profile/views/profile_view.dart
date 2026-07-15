@@ -81,7 +81,7 @@ class ProfileView extends StatelessWidget {
                       "Privasi & Keamanan",
                       "Kelola privasi dan keamanan akun",
                       onTap: () => controller.launchWebUrl(
-                        "https://tegalculture.id/privacy-policy",
+                        controller.getBaseWebUrl('/privacy-policy'),
                       ),
                     ),
                     const SizedBox(height: 25),
@@ -91,7 +91,7 @@ class ProfileView extends StatelessWidget {
                       "Tentang Aplikasi",
                       "Informasi tentang Tegal Culture",
                       onTap: () => controller.launchWebUrl(
-                        "https://tegalculture.id/about",
+                        controller.getBaseWebUrl('/tentang'),
                       ),
                     ),
                     _buildMenuItem(
@@ -99,7 +99,7 @@ class ProfileView extends StatelessWidget {
                       "Bantuan",
                       "Pusat bantuan dan FAQ",
                       onTap: () => controller.launchWebUrl(
-                        "https://tegalculture.id/help",
+                        controller.getBaseWebUrl('/help'),
                       ),
                     ),
                     _buildMenuItem(
@@ -107,7 +107,7 @@ class ProfileView extends StatelessWidget {
                       "Syarat & Ketentuan",
                       "Baca syarat dan ketentuan penggunaan",
                       onTap: () => controller.launchWebUrl(
-                        "https://tegalculture.id/terms-of-service",
+                        controller.getBaseWebUrl('/terms-of-service'),
                       ),
                     ),
                     const SizedBox(height: 10),

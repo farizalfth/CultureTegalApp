@@ -40,6 +40,12 @@ class ProfileController extends GetxController {
     loadAllProfileData();
   }
 
+  String getBaseWebUrl(String path) {
+    final String cleanBase = baseUrl.replaceAll('/api/v1', '').trim();
+    final String sanitizedPath = path.startsWith('/') ? path : '/$path';
+    return '$cleanBase$sanitizedPath';
+  }
+
   Future<void> loadAllProfileData() async {
     isLoading.value = true;
     try {
