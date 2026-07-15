@@ -36,7 +36,7 @@ android {
     }
 
     signingConfigs {
-        getByName("release") {
+        create("release") {
             if (keystorePropertiesFile.exists()) {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
@@ -48,6 +48,12 @@ android {
 
                 storeFile = storeFilePath?.let { file(it) }
                 storePassword = keystoreProperties.getProperty("storePassword")
+            } else {
+                val debugConfig = signingConfigs.getByName("debug")
+                keyAlias = debugConfig.keyAlias
+                keyPassword = debugConfig.keyPassword
+                storeFile = debugConfig.storeFile
+                storePassword = debugConfig.storePassword
             }
         }
     }

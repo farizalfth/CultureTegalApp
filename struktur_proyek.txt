@@ -264,7 +264,6 @@ Struktur Direktori Proyek:
 │   │   └── widgets
 │   │       └── main_header.dart
 │   └── main.dart
-├── project_bundle.txt
 ├── pubspec.lock
 ├── pubspec.yaml
 ├── struktur_proyek.txt
