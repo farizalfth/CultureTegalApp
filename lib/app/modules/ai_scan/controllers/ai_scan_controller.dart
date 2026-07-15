@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import '../../../data/service/auth_service.dart';
 
 class AiScanController extends GetxController {
@@ -21,6 +20,26 @@ class AiScanController extends GetxController {
   void onInit() {
     super.onInit();
     loadScanHistory();
+  }
+
+  String getFormattedImageUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.isEmpty) return '';
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+      return rawUrl;
+    }
+
+    final String cleanHost = baseUrl
+        .replaceAll('http://', '')
+        .replaceAll('https://', '')
+        .replaceAll('/api/v1', '')
+        .trim();
+
+    final String protocol = baseUrl.startsWith('https')
+        ? 'https://'
+        : 'http://';
+    final String sanitizedPath = rawUrl.startsWith('/') ? rawUrl : '/$rawUrl';
+
+    return '$protocol$cleanHost$sanitizedPath';
   }
 
   Future<void> loadScanHistory() async {
@@ -92,7 +111,7 @@ class AiScanController extends GetxController {
       isLoading.value = false;
     }
   }
-  
+
   Future<void> launchVideo(String urlString) async {
     Get.toNamed('/webview', arguments: urlString);
   }

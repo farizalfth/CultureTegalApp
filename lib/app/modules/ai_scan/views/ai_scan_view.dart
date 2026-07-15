@@ -19,7 +19,11 @@ class AiScanView extends GetView<AiScanController> {
       appBar: AppBar(
         title: const Text(
           "Pindai AI Kuliner",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: Colors.black87,
+            letterSpacing: -0.5,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -28,69 +32,92 @@ class AiScanView extends GetView<AiScanController> {
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             color: Colors.black87,
+            size: 20,
           ),
           onPressed: () => Get.back(),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + safeBottom),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + safeBottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Scanner Control Panel
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
-                  const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: AppColors.accent,
-                    size: 40,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: AppColors.accent,
+                      size: 32,
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   const Text(
                     "Pindai Makanan Tradisional",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      letterSpacing: -0.3,
+                    ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     "Pindai sate blengong, kupat glabed, atau nasi bogana menggunakan kamera AI.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey.shade500,
                       fontSize: 12,
-                      height: 1.4,
+                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton.icon(
+                        child: OutlinedButton.icon(
                           onPressed: () =>
                               controller.pickAndScanImage(ImageSource.camera),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            minimumSize: const Size(double.infinity, 50),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                            minimumSize: const Size(double.infinity, 52),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           icon: const Icon(
                             Icons.camera_alt_outlined,
-                            color: Colors.white,
-                            size: 18,
+                            color: AppColors.primary,
+                            size: 20,
                           ),
                           label: const Text(
                             "Kamera",
                             style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
@@ -101,22 +128,23 @@ class AiScanView extends GetView<AiScanController> {
                           onPressed: () =>
                               controller.pickAndScanImage(ImageSource.gallery),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: AppColors.primary,
+                            minimumSize: const Size(double.infinity, 52),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
+                            elevation: 0,
                           ),
                           icon: const Icon(
                             Icons.photo_library_outlined,
                             color: Colors.white,
-                            size: 18,
+                            size: 20,
                           ),
                           label: const Text(
                             "Galeri",
                             style: TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
@@ -126,182 +154,53 @@ class AiScanView extends GetView<AiScanController> {
                 ],
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 28),
+
+            // Dynamic Scan Result Section
             Obx(() {
               if (controller.isLoading.value) {
-                return Container(
-                  width: double.infinity,
-                  height: 180,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(24)),
-                  ),
-                  child: const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: AppColors.primary),
-                        SizedBox(height: 15),
-                        Text(
-                          "AI sedang menganalisis makanan...",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                return _buildLoadingState();
               }
 
               final result = controller.scanResult.value;
               if (result == null) return const SizedBox.shrink();
 
-              final food = result['food_details'];
-              final confidencePct = ((result['confidence'] ?? 0.0) * 100)
-                  .toStringAsFixed(0);
-
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: AppColors.accent.withOpacity(0.2),
-                    width: 1.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            food != null
-                                ? food['nama_makanan']
-                                : 'Hasil Analisis',
-                            style: const TextStyle(
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          "Kecocokan: $confidencePct%",
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    Text(
-                      food != null
-                          ? food['deskripsi']
-                          : 'Deskripsi makanan tidak ditemukan.',
-                      style: TextStyle(
-                        color: Colors.grey.shade800,
-                        fontSize: 13,
-                        height: 1.5,
-                      ),
-                    ),
-                    if (food != null && food['video_url'] != null) ...[
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            controller.launchVideo(food['video_url']),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade700,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        icon: const Icon(
-                          Icons.play_circle_fill_rounded,
-                          color: Colors.white,
-                        ),
-                        label: const Text(
-                          "Putar Video Resep Khas",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Get.toNamed(Routes.KUIS_BUDAYA);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      icon: const Icon(Icons.quiz_rounded, color: Colors.white),
-                      label: const Text(
-                        "Kerjakan Kuis Terbuka",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return _buildResultCard(result);
             }),
-            const SizedBox(height: 30),
+            const SizedBox(height: 28),
+
+            // Scan History Section
             const Text(
               "Riwayat Pindaian AI",
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                fontSize: 17,
                 color: Colors.black87,
+                letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             Obx(() {
               if (controller.isHistoryLoading.value &&
                   controller.scanHistory.isEmpty) {
                 return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
                 );
               }
 
               if (controller.scanHistory.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    padding: const EdgeInsets.symmetric(vertical: 36),
                     child: Text(
                       "Belum ada riwayat pindaian makanan.",
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: Colors.grey.shade400,
                         fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -330,8 +229,8 @@ class AiScanView extends GetView<AiScanController> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 10,
+                          color: Colors.black.withOpacity(0.015),
+                          blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
                       ],
@@ -342,30 +241,30 @@ class AiScanView extends GetView<AiScanController> {
                         borderRadius: BorderRadius.circular(20),
                         onTap: () => _showScanDetails(context, item),
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(14),
                           child: Row(
                             children: [
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                                 child: img != null
                                     ? CachedNetworkImage(
-                                        imageUrl:
-                                            "http://${controller.baseUrl.replaceAll('http://', '').replaceAll('/api/v1', '')}$img",
-                                        width: 40,
-                                        height: 40,
+                                        imageUrl: controller
+                                            .getFormattedImageUrl(img),
+                                        width: 48,
+                                        height: 48,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) =>
                                             const ShimmerPlaceholder(
-                                              width: 40,
-                                              height: 40,
-                                              borderRadius: 12,
+                                              width: 48,
+                                              height: 48,
+                                              borderRadius: 14,
                                             ),
                                         errorWidget: (context, url, error) =>
                                             _buildFallbackIcon(),
                                       )
                                     : _buildFallbackIcon(),
                               ),
-                              const SizedBox(width: 15),
+                              const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,22 +274,25 @@ class AiScanView extends GetView<AiScanController> {
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
+                                        color: Colors.black87,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       "Dipindai pada: $date",
                                       style: TextStyle(
-                                        color: Colors.grey.shade500,
+                                        color: Colors.grey.shade400,
                                         fontSize: 11,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                color: Colors.grey,
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.grey.shade300,
+                                size: 16,
                               ),
                             ],
                           ),
@@ -407,18 +309,215 @@ class AiScanView extends GetView<AiScanController> {
     );
   }
 
+  Widget _buildLoadingState() {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+            SizedBox(height: 18),
+            Text(
+              "AI sedang menganalisis kuliner...",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultCard(Map<String, dynamic> result) {
+    final food = result['food_details'];
+    final confidencePct = ((result['confidence'] ?? 0.0) * 100).toStringAsFixed(
+      0,
+    );
+    final String? imgUrl = result['image_url'];
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Visual Header with Bounding Box Image
+          if (imgUrl != null)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: controller.getFormattedImageUrl(imgUrl),
+                    height: 220,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const ShimmerPlaceholder(
+                      width: double.infinity,
+                      height: 220,
+                      borderRadius: 0,
+                    ),
+                    errorWidget: (context, url, error) =>
+                        const SizedBox.shrink(),
+                  ),
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "Kecocokan: $confidencePct%",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+          // Card Content
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    food != null ? food['nama_makanan'] : 'Hasil Analisis',
+                    style: const TextStyle(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  food != null
+                      ? food['deskripsi']
+                      : 'Deskripsi makanan tidak ditemukan.',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                if (food != null && food['video_url'] != null) ...[
+                  ElevatedButton.icon(
+                    onPressed: () => controller.launchVideo(food['video_url']),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(
+                      Icons.play_circle_fill_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    label: const Text(
+                      "Putar Video Resep Khas",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Get.toNamed(Routes.KUIS_BUDAYA);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(
+                    Icons.quiz_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  label: const Text(
+                    "Kerjakan Kuis Terbuka",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFallbackIcon() {
     return Container(
-      width: 40,
-      height: 40,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: const Icon(
         Icons.fastfood_rounded,
         color: AppColors.accent,
-        size: 20,
+        size: 22,
       ),
     );
   }
@@ -442,7 +541,7 @@ class AiScanView extends GetView<AiScanController> {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           padding: EdgeInsets.fromLTRB(
             24,
@@ -457,81 +556,81 @@ class AiScanView extends GetView<AiScanController> {
               if (img != null)
                 Center(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     child: CachedNetworkImage(
-                      imageUrl:
-                          "http://${controller.baseUrl.replaceAll('http://', '').replaceAll('/api/v1', '')}$img",
-                      height: 180,
+                      imageUrl: controller.getFormattedImageUrl(img),
+                      height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const ShimmerPlaceholder(
                         width: double.infinity,
-                        height: 180,
-                        borderRadius: 16,
+                        height: 200,
+                        borderRadius: 20,
                       ),
                       errorWidget: (context, url, error) =>
                           const SizedBox.shrink(),
                     ),
                   ),
                 ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.1),
+                  color: AppColors.accent.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   name,
                   style: const TextStyle(
                     color: AppColors.accent,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               Text(
                 desc,
                 style: TextStyle(
-                  color: Colors.grey.shade800,
+                  color: Colors.grey.shade700,
                   fontSize: 13,
-                  height: 1.5,
+                  height: 1.6,
                 ),
               ),
+              const SizedBox(height: 24),
               if (videoUrl != null) ...[
-                const SizedBox(height: 20),
                 ElevatedButton.icon(
                   onPressed: () {
                     Get.back();
                     controller.launchVideo(videoUrl);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade700,
-                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Colors.red.shade600,
+                    minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
                   ),
                   icon: const Icon(
                     Icons.play_circle_fill_rounded,
                     color: Colors.white,
+                    size: 20,
                   ),
                   label: const Text(
                     "Putar Video Resep Khas",
                     style: TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       fontSize: 14,
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
               ],
-              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: () {
                   Get.back();
@@ -539,18 +638,22 @@ class AiScanView extends GetView<AiScanController> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 52),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 0,
                 ),
-                icon: const Icon(Icons.quiz_rounded, color: Colors.white),
+                icon: const Icon(
+                  Icons.quiz_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 label: const Text(
                   "Buka Kuis Pengetahuan",
                   style: TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
                 ),

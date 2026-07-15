@@ -1,0 +1,272 @@
+Struktur Direktori Proyek:
+.
+├── .env
+├── .flutter-plugins-dependencies
+├── .gitignore
+├── .metadata
+├── README.md
+├── analysis_options.yaml
+├── assets
+│   └── images
+│       ├── beranda
+│       │   └── cover_atas.png
+│       ├── jelajah
+│       │   └── cover_info_badge.png
+│       ├── login
+│       │   ├── cover_login.png
+│       │   └── google_icon.png
+│       └── register
+│           └── register_icon.png
+├── f.py
+├── lib
+│   ├── app
+│   │   ├── bindings
+│   │   │   └── initial_binding.dart
+│   │   ├── data
+│   │   │   ├── app_colors.dart
+│   │   │   ├── app_config.dart
+│   │   │   ├── models
+│   │   │   │   ├── culture_model.dart
+│   │   │   │   ├── event_model.dart
+│   │   │   │   ├── facility_model.dart
+│   │   │   │   ├── map_item_model.dart
+│   │   │   │   ├── models.dart
+│   │   │   │   ├── news_model.dart
+│   │   │   │   ├── review_model.dart
+│   │   │   │   ├── umkm_model.dart
+│   │   │   │   └── user_model.dart
+│   │   │   ├── providers
+│   │   │   │   ├── culture_provider.dart
+│   │   │   │   ├── event_provider.dart
+│   │   │   │   ├── news_provider.dart
+│   │   │   │   ├── umkm_provider.dart
+│   │   │   │   └── user_provider.dart
+│   │   │   ├── repositories
+│   │   │   │   └── user_repository.dart
+│   │   │   └── service
+│   │   │       ├── auth_service.dart
+│   │   │       ├── secure_storage_service.dart
+│   │   │       └── user_service.dart
+│   │   ├── modules
+│   │   │   ├── ai_scan
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── ai_scan_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── ai_scan_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── ai_scan_view.dart
+│   │   │   ├── analitik
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── analitik_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── analitik_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── analitik_view.dart
+│   │   │   ├── detail_budaya
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── detail_budaya_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── detail_budaya_controller.dart
+│   │   │   │   └── views
+│   │   │   │       ├── detail_budaya_view.dart
+│   │   │   │       └── gallery_views.dart
+│   │   │   ├── edit_profile
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── edit_profile_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── edit_profile_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── edit_profile_view.dart
+│   │   │   ├── event
+│   │   │   │   ├── bindings
+│   │   │   │   │   ├── detail_event_binding.dart
+│   │   │   │   │   ├── event_binding.dart
+│   │   │   │   │   └── event_list_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   ├── detail_event_controller.dart
+│   │   │   │   │   ├── event_controller.dart
+│   │   │   │   │   └── event_list_controller.dart
+│   │   │   │   └── views
+│   │   │   │       ├── detail_event_view.dart
+│   │   │   │       ├── event_list_view.dart
+│   │   │   │       └── event_view.dart
+│   │   │   ├── explore
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── explore_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── explore_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── explore_view.dart
+│   │   │   ├── favorit
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── favorit_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── favorit_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── favorit_view.dart
+│   │   │   ├── forgot_password
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── forgot_password_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── forgot_password_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── forgot_password_view.dart
+│   │   │   ├── home
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── home_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── home_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── home_view.dart
+│   │   │   ├── login
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── login_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── login_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── login_view.dart
+│   │   │   ├── main
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── main_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── main_view.dart
+│   │   │   ├── map_explore
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── map_explore_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── map_explore_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── map_explore_view.dart
+│   │   │   ├── news
+│   │   │   │   ├── bindings
+│   │   │   │   │   ├── news_detail_binding.dart
+│   │   │   │   │   └── news_list_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   ├── news_detail_controller.dart
+│   │   │   │   │   └── news_list_controller.dart
+│   │   │   │   └── views
+│   │   │   │       ├── news_detail_view.dart
+│   │   │   │       └── news_list_view.dart
+│   │   │   ├── notifikasi
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── notifikasi_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── notifikasi_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── notifikasi_view.dart
+│   │   │   ├── pencapaian
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── pencapaian_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── pencapaian_controller.dart
+│   │   │   │   ├── detail_pencapaian
+│   │   │   │   │   ├── bindings
+│   │   │   │   │   │   └── detail_pencapaian_binding.dart
+│   │   │   │   │   ├── controllers
+│   │   │   │   │   │   └── detail_pencapaian_controller.dart
+│   │   │   │   │   └── views
+│   │   │   │   │       └── detail_pencapaian_view.dart
+│   │   │   │   └── views
+│   │   │   │       └── pencapaian_view.dart
+│   │   │   ├── profile
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── profile_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── profile_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── profile_view.dart
+│   │   │   ├── quiz
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── quiz_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── quiz_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── quiz_view.dart
+│   │   │   ├── register
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── register_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── register_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── register_view.dart
+│   │   │   ├── review
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── review_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── review_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── review_view.dart
+│   │   │   ├── riwayat_jelajah
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── riwayat_jelajah_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── riwayat_jelajah_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── riwayat_jelajah_view.dart
+│   │   │   ├── scan_history
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── scan_history_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── scan_history_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── scan_history_view.dart
+│   │   │   ├── search
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── search_page_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── search_page_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── search_page_view.dart
+│   │   │   ├── umkm
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── umkm_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── umkm_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── umkm_view.dart
+│   │   │   ├── umkm_detail
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── umkm_detail_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── umkm_detail_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── umkm_detail_view.dart
+│   │   │   ├── update_password
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── update_password_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── update_password_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── update_password_view.dart
+│   │   │   ├── verify_otp
+│   │   │   │   ├── bindings
+│   │   │   │   │   └── verify_otp_binding.dart
+│   │   │   │   ├── controllers
+│   │   │   │   │   └── verify_otp_controller.dart
+│   │   │   │   └── views
+│   │   │   │       └── verify_otp_view.dart
+│   │   │   └── webview
+│   │   │       ├── bindings
+│   │   │       │   └── webview_binding.dart
+│   │   │       ├── controllers
+│   │   │       │   └── webview_controller.dart
+│   │   │       └── views
+│   │   │           └── webview_view.dart
+│   │   ├── routes
+│   │   │   ├── app_pages.dart
+│   │   │   └── app_routes.dart
+│   │   ├── utils
+│   │   │   ├── icon_mapping.dart
+│   │   │   ├── image_viewer.dart
+│   │   │   └── shimmer_placeholder.dart
+│   │   └── widgets
+│   │       └── main_header.dart
+│   └── main.dart
+├── project_bundle.txt
+├── pubspec.lock
+├── pubspec.yaml
+├── struktur_proyek.txt
+└── test
+    └── widget_test.dart
