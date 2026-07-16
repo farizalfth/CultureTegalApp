@@ -254,7 +254,7 @@ class DetailBudayaController extends GetxController {
           await UserService.to.refreshUserData();
           Get.snackbar(
             "Apresiasi Literasi",
-            "Kamu mendapatkan +10 Poin Budaya karena meluangkan waktu mempelajari sejarah objek ini!",
+            "Kamu mendapatkan +2000 Poin Budaya karena meluangkan waktu mempelajari sejarah objek ini!",
             backgroundColor: Colors.amber.shade700,
             colorText: Colors.white,
             duration: const Duration(seconds: 4),
@@ -515,7 +515,7 @@ class DetailBudayaController extends GetxController {
               ),
             ),
             content: const Text(
-              "Selamat! Kehadiran fisikmu terverifikasi secara geofencing rill. +100 Poin Budaya telah ditambahkan ke akunmu.",
+              "Selamat! Kehadiran fisikmu terverifikasi secara geofencing rill. +10000 Poin Budaya telah ditambahkan ke akunmu.",
               style: TextStyle(fontSize: 13, height: 1.4),
             ),
             actions: [

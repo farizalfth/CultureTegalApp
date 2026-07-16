@@ -371,7 +371,7 @@ class MapExploreController extends GetxController
         nearSiteItem.value = null;
         Get.snackbar(
           "Verifikasi Berhasil!",
-          "Kamu berhasil memverifikasi kunjungan dan mendapatkan 100 Poin!",
+          "Kamu berhasil memverifikasi kunjungan dan mendapatkan 10000 Poin!",
           backgroundColor: Colors.green.shade600,
           colorText: Colors.white,
           duration: const Duration(seconds: 4),

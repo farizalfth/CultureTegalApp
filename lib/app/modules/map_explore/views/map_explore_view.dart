@@ -386,7 +386,7 @@ class MapExploreView extends GetView<MapExploreController> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  "Klik tombol untuk klaim 100 Poin Kunjungan.",
+                  "Klik tombol untuk klaim 10000 Poin Kunjungan.",
                   style: TextStyle(color: Colors.green.shade800, fontSize: 11),
                 ),
               ],
